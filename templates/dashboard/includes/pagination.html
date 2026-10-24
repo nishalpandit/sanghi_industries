@@ -1,0 +1,26 @@
+<!-- Pagination Controls -->
+{% if page_obj.has_other_pages %}
+<div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 24px; flex-wrap: wrap;">
+  {% if page_obj.has_previous %}
+  <a href="?page={{ page_obj.previous_page_number }}" class="btn" style="padding: 8px 14px; background: #fff; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-dark); text-decoration: none; font-size: 0.9rem;">
+    <i class="fas fa-chevron-left"></i> Prev
+  </a>
+  {% endif %}
+  
+  {% for num in page_obj.paginator.page_range %}
+    {% if page_obj.number == num %}
+    <span style="padding: 8px 14px; background: var(--primary-color); color: #fff; border-radius: 6px; font-weight: 600; font-size: 0.9rem;">{{ num }}</span>
+    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+    <a href="?page={{ num }}" class="btn" style="padding: 8px 14px; background: #fff; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-dark); text-decoration: none; font-size: 0.9rem;">{{ num }}</a>
+    {% endif %}
+  {% endfor %}
+  
+  {% if page_obj.has_next %}
+  <a href="?page={{ page_obj.next_page_number }}" class="btn" style="padding: 8px 14px; background: #fff; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-dark); text-decoration: none; font-size: 0.9rem;">
+    Next <i class="fas fa-chevron-right"></i>
+  </a>
+  {% endif %}
+  
+  <span style="margin-left: 12px; font-size: 0.85rem; color: var(--text-muted);">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+</div>
+{% endif %}

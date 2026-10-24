@@ -1,0 +1,141 @@
+{% extends "user_dashboard/base.html" %}
+{% load static %}
+
+{% block title %}Feedback{% endblock %}
+
+{% block active_feedback %}active{% endblock %}
+
+{% block header_title %}
+<h2>Feedback &amp; Suggestions</h2>
+{% endblock %}
+
+{% block content %}
+<section class="page-section active">
+    <div class="feedback-layout" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 32px; align-items: start;">
+
+        <!-- Feedback Form -->
+        <div class="feedback-form-card" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 24px; padding: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+            <div class="feedback-form-header" style="margin-bottom: 24px; border-bottom: 1px solid var(--border-light); padding-bottom: 18px;">
+                <h3 style="font-size: 1.4rem; font-weight: 800; color: var(--text-main); margin: 0 0 6px; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.6rem;">💬</span> Send Us Your Feedback
+                </h3>
+                <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">We actively review every submission to refine our AI generators &amp; features!</p>
+            </div>
+
+            <div class="feedback-form-body">
+                <form method="POST" action="{% url 'user_dashboard:feedback' %}">
+                    {% csrf_token %}
+
+                    <!-- Category / Subject -->
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label class="form-label" for="feedback-category" style="display: block; font-size: 0.88rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">Feedback Category</label>
+                        <select class="form-select" id="feedback-category" name="category" required style="width: 100%; padding: 13px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-main); font-size: 0.95rem; outline: none;">
+                            <option value="" disabled selected>Select a category...</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat }}">{{ cat }}</option>
+                            {% endfor %}
+                            {% if not categories %}
+                            <option value="Ui / Design">UI / Design</option>
+                            <option value="Templates">Templates</option>
+                            <option value="Performance">Performance</option>
+                            <option value="Bug report">Bug report</option>
+                            <option value="Feature Request">Feature Request</option>
+                            <option value="Other">Other</option>
+                            {% endif %}
+                        </select>
+                    </div>
+
+                    <!-- Message / Description -->
+                    <div class="form-group" style="margin-bottom: 24px;">
+                        <label class="form-label" for="feedback-message" style="display: block; font-size: 0.88rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">Your Message or Description</label>
+                        <textarea class="form-textarea" id="feedback-message" name="description" rows="5"
+                                  placeholder="Describe your suggestion, bug report, or design ideas in detail..." required 
+                                  style="width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-main); font-size: 0.95rem; outline: none; resize: vertical; line-height: 1.5;"></textarea>
+                    </div>
+
+                    <!-- Rating (star radios) -->
+                    <div class="form-group" style="margin-bottom: 28px;">
+                        <label class="form-label" style="display: block; font-size: 0.88rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">Experience Rating</label>
+                        <div class="star-rating" style="display: flex; gap: 8px; font-size: 1.8rem; flex-direction: row-reverse; justify-content: flex-end;">
+                            <input type="radio" id="star5" name="rating" value="5" style="display:none;"><label for="star5" title="5 stars" style="cursor: pointer; transition: transform 0.15s;">★</label>
+                            <input type="radio" id="star4" name="rating" value="4" style="display:none;"><label for="star4" title="4 stars" style="cursor: pointer; transition: transform 0.15s;">★</label>
+                            <input type="radio" id="star3" name="rating" value="3" checked style="display:none;"><label for="star3" title="3 stars" style="cursor: pointer; transition: transform 0.15s;">★</label>
+                            <input type="radio" id="star2" name="rating" value="2" style="display:none;"><label for="star2" title="2 stars" style="cursor: pointer; transition: transform 0.15s;">★</label>
+                            <input type="radio" id="star1" name="rating" value="1" style="display:none;"><label for="star1" title="1 star" style="cursor: pointer; transition: transform 0.15s;">★</label>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 15px; border-radius: 30px; font-weight: 700; font-size: 1rem; box-shadow: 0 4px 20px rgba(124, 58, 237, 0.35); display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        Submit Feedback
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Dynamic User Feedback History Log -->
+        <div class="feedback-history-card" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 24px; padding: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--border-light); padding-bottom: 18px;">
+                <h3 style="font-size: 1.4rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.6rem;">📋</span> My Feedback History
+                </h3>
+                <span style="background: rgba(124, 58, 237, 0.15); color: #8b5cf6; padding: 4px 12px; border-radius: 20px; font-size: 0.82rem; font-weight: 700;">
+                    {{ feedbacks|length }} Submission{{ feedbacks|length|pluralize }}
+                </span>
+            </div>
+
+            <div class="feedback-list" style="display: flex; flex-direction: column; gap: 16px; max-height: 580px; overflow-y: auto; padding-right: 4px;">
+                {% for fb in feedbacks %}
+                <div class="feedback-item" style="background: var(--bg-input); border: 1px solid var(--border); border-radius: 16px; padding: 20px; transition: transform 0.2s, box-shadow 0.2s;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                        <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; font-size: 0.78rem; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            {{ fb.category }}
+                        </span>
+                        <div style="color: #eab308; font-size: 1.1rem; letter-spacing: 2px;" title="{{ fb.rating }} out of 5 stars">
+                            {% if fb.rating >= 1 %}★{% endif %}{% if fb.rating >= 2 %}★{% endif %}{% if fb.rating >= 3 %}★{% endif %}{% if fb.rating >= 4 %}★{% endif %}{% if fb.rating == 5 %}★{% endif %}
+                            <span style="color: var(--text-muted); font-size: 0.8rem; margin-left: 4px;">({{ fb.rating }}/5)</span>
+                        </div>
+                    </div>
+
+                    <p style="color: var(--text-main); font-size: 0.95rem; line-height: 1.5; margin: 0 0 14px; word-break: break-word;">
+                        "{{ fb.description }}"
+                    </p>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: var(--text-muted); border-top: 1px dashed var(--border-light); padding-top: 12px;">
+                        <span style="color: #10b981; font-weight: 600;">✓ Received by team</span>
+                        <span>🕒 {{ fb.created_at|date:"M d, Y • h:i A" }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <div style="text-align: center; padding: 40px 20px; background: var(--bg-input); border-radius: 16px; border: 1px dashed var(--border-light);">
+                    <div style="font-size: 2.5rem; margin-bottom: 12px; opacity: 0.6;">✨</div>
+                    <h4 style="color: var(--text-main); font-size: 1.1rem; font-weight: 700; margin: 0 0 6px;">No Feedback History</h4>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0; max-width: 280px; display: inline-block;">
+                        You have not submitted any feedback yet. Your review history will automatically appear right here once submitted!
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<style>
+    /* Styling for Star Rating hover interactions */
+    .star-rating input:checked ~ label,
+    .star-rating label:hover,
+    .star-rating label:hover ~ label {
+        color: #eab308 !important;
+    }
+    .star-rating label {
+        color: var(--border-light);
+    }
+    .feedback-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        border-color: rgba(124, 58, 237, 0.4);
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,419 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login - Sanghi Industries</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #ff4d4d;
+      --primary-glow: rgba(255, 77, 77, 0.4);
+      --bg-color: #050505; 
+      --surface: rgba(255, 255, 255, 0.05);
+      --surface-border: rgba(255, 255, 255, 0.15);
+      --text-main: #ffffff;
+      --text-muted: #d0d0d0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Full screen generated background image */
+    .bg-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-image: url("{% static 'dashboard/images/login_side_image.png' %}");
+      background-size: cover;
+      background-position: center;
+      z-index: 0;
+      filter: brightness(0.65) contrast(1.1); /* Darken slightly to make form pop */
+      animation: slowZoom 20s ease-in-out infinite alternate;
+      transform-origin: center;
+    }
+
+    @keyframes slowZoom {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.05); }
+    }
+
+    .noise {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1;
+      mix-blend-mode: overlay;
+    }
+
+    .login-container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 440px;
+      padding: 3.5rem 3rem;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 24px;
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    @keyframes slideUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .brand-logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .brand-logo img {
+      width: 200px;
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+    }
+
+    .form-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .form-header h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(to right, #ffffff, #c0c0c0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .form-header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .form-control {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: var(--text-main);
+      padding: 1.15rem 1.25rem 1.15rem 3rem;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: all 0.3s ease;
+      outline: none;
+      backdrop-filter: blur(10px);
+    }
+
+    .form-control::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+      transition: opacity 0.3s ease;
+    }
+
+    .form-control:focus::placeholder {
+      opacity: 0.7;
+    }
+
+    .form-control:focus {
+      background: rgba(0, 0, 0, 0.6);
+      border-color: rgba(255, 255, 255, 0.5);
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 1.2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      pointer-events: none;
+      transition: color 0.3s ease;
+    }
+
+    .form-control:focus ~ .input-icon,
+    .form-control:not(:placeholder-shown) ~ .input-icon {
+      color: #fff;
+    }
+
+    .form-options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1.5rem;
+      margin-bottom: 2.5rem;
+      font-size: 0.9rem;
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      user-select: none;
+      transition: color 0.3s ease;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    }
+
+    .checkbox-container:hover {
+      color: var(--text-main);
+    }
+
+    .checkbox-container input {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 1px solid var(--text-muted);
+      border-radius: 5px;
+      background: rgba(0,0,0,0.3);
+      cursor: pointer;
+      display: grid;
+      place-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .checkbox-container input::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      transform: scale(0);
+      transition: 120ms transform ease-in-out;
+      box-shadow: inset 1em 1em var(--text-main);
+      background-color: var(--text-main);
+      transform-origin: center;
+      clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+    }
+
+    .checkbox-container input:checked {
+      border-color: var(--text-main);
+    }
+
+    .checkbox-container input:checked::before {
+      transform: scale(1);
+    }
+
+    .forgot-password {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      position: relative;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    }
+
+    .forgot-password::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      transform: scaleX(0);
+      height: 1px;
+      bottom: -2px;
+      left: 0;
+      background-color: #fff;
+      transform-origin: bottom right;
+      transition: transform 0.3s cubic-bezier(0.86, 0, 0.07, 1);
+    }
+
+    .forgot-password:hover {
+      color: var(--text-main);
+    }
+
+    .forgot-password:hover::after {
+      transform: scaleX(1);
+      transform-origin: bottom left;
+    }
+
+    .btn-login {
+      width: 100%;
+      background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+      color: #000;
+      border: none;
+      padding: 1.15rem;
+      border-radius: 14px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.75rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-login::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+      transition: all 0.5s ease;
+    }
+
+    .btn-login:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-login:hover::before {
+      left: 100%;
+    }
+
+    .btn-login:active {
+      transform: translateY(0);
+    }
+
+    .back-nav {
+      position: absolute;
+      top: 2.5rem;
+      left: 3rem;
+      z-index: 20;
+    }
+
+    .back-link {
+      color: var(--text-main);
+      text-decoration: none;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      padding: 0.6rem 1.2rem;
+      border-radius: 30px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .back-link:hover {
+      background: rgba(0,0,0,0.6);
+      border-color: rgba(255,255,255,0.3);
+      transform: translateX(-4px);
+    }
+
+    @media (max-width: 600px) {
+      .login-container {
+        margin: 1.5rem;
+        padding: 2.5rem 2rem;
+      }
+      .back-nav {
+        top: 1.5rem;
+        left: 1.5rem;
+      }
+      .brand-logo img {
+        width: 180px;
+      }
+      .form-header h1 {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-image"></div>
+  <div class="noise"></div>
+
+  <div class="back-nav">
+    <a href="javascript:history.back()" class="back-link">
+      <i class="fas fa-arrow-left"></i> Back
+    </a>
+  </div>
+
+  <main class="login-container">
+    <div class="brand-logo">
+      <img src="{% static 'dashboard/images/logo.png' %}" alt="Sanghi Logo">
+    </div>
+
+    <div class="form-header">
+      <h1>Welcome Back</h1>
+      <p>Please sign in to your account</p>
+    </div>
+
+    <form action="{% url 'login' %}" method="post">
+      {% csrf_token %}
+      {% if error %}
+      <div style="background: rgba(255, 77, 77, 0.1); color: var(--primary); padding: 12px; border-radius: 8px; margin-bottom: 16px; border: 1px solid rgba(255, 77, 77, 0.3); text-align: center; font-size: 0.9rem;">
+        {{ error }}
+      </div>
+      {% endif %}
+      <div class="form-group">
+        <input type="text" id="username" name="username" class="form-control" placeholder="Username" required>
+        <i class="fas fa-user input-icon"></i>
+      </div>
+
+      <div class="form-group">
+        <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
+        <i class="fas fa-lock input-icon"></i>
+      </div>
+
+      <div class="form-options">
+        <label class="checkbox-container">
+          <input type="checkbox" id="show-password-cb">
+          Show password
+        </label>
+        <a href="#" class="forgot-password">Forgot password?</a>
+      </div>
+
+      <button type="submit" class="btn-login">
+        Sign In <i class="fas fa-arrow-right"></i>
+      </button>
+    </form>
+  </main>
+
+  <script>
+    document.getElementById('show-password-cb').addEventListener('change', function() {
+      const passwordInput = document.getElementById('password');
+      if (this.checked) {
+        passwordInput.type = 'text';
+      } else {
+        passwordInput.type = 'password';
+      }
+    });
+  </script>
+</body>
+</html>

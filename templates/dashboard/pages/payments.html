@@ -1,0 +1,78 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Payments</h1>
+    <div class="breadcrumb">
+      <a href="{% url 'dashboard' %}">Dashboard</a><i class="fas fa-chevron-right"></i><span>Payments</span>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3>Transaction History</h3>
+  </div>
+  <div class="card-body">
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Plan Name</th>
+            <th>Amount</th>
+            <th>Payment Method</th>
+            <th>Status</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for payment in payments %}
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:12px">
+                {% if payment.profile.profile_picture %}
+                <img src="{{ payment.profile.profile_picture.url }}" alt="{{ payment.profile.user.first_name }}" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid var(--border-light);flex-shrink:0;">
+                {% else %}
+                <img src="https://ui-avatars.com/api/?name={{ payment.profile.user.first_name|default:payment.profile.user.username|default:'U'|urlencode }}&background=7C3AED&color=fff&size=128&bold=true" alt="{{ payment.profile.user.first_name }}" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid var(--border-light);flex-shrink:0;">
+                {% endif %}
+                <div>
+                  <div style="font-weight:600;color:var(--text-primary)">{{ payment.profile.user.first_name }} {{ payment.profile.user.last_name }}</div>
+                  <div style="font-size:0.8rem;color:var(--text-muted)">{{ payment.profile.mobile_number }}</div>
+                </div>
+              </div>
+            </td>
+            <td><span style="font-weight: 500;">{{ payment.plan_name }}</span></td>
+            <td>₹{{ payment.amount }}</td>
+            <td>
+              <span class="badge" style="background:var(--info-light);color:var(--info)">
+                {{ payment.payment_method|upper }}
+              </span>
+            </td>
+            <td>
+              {% if payment.status == 'completed' %}
+              <span class="badge" style="background:var(--success-light);color:var(--success)">Completed</span>
+              {% elif payment.status == 'failed' %}
+              <span class="badge" style="background:var(--danger-light);color:var(--danger)">Failed</span>
+              {% else %}
+              <span class="badge" style="background:var(--warning-light);color:var(--warning)">{{ payment.status|title }}</span>
+              {% endif %}
+            </td>
+            <td>{{ payment.created_at|date:"M d, Y, h:i A" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted)">
+              No payments found.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include 'dashboard/includes/pagination.html' with page_obj=page_obj %}
+  </div>
+</div>
+{% endblock %}

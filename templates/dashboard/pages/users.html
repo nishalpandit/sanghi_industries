@@ -1,0 +1,391 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>User Management</h1>
+    <div class="breadcrumb"><a href="{% url 'dashboard' %}">Dashboard</a><i class="fas fa-chevron-right"></i><span>Users</span></div>
+  </div>
+  <div class="page-actions">
+    <button class="btn btn-secondary" onclick="UserManager.exportUsers('csv')"><i class="fas fa-download"></i> Export CSV</button>
+    <button class="btn btn-primary" onclick="Modal.open('addUserModal')"><i class="fas fa-user-plus"></i> Add User</button>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card primary">
+    <div class="stat-info">
+      <h3>Total Users</h3>
+      <div class="stat-value">{{ total_users|default:"0" }}</div>
+      <div class="stat-change positive"><i class="fas fa-arrow-up"></i> {{ total_users_change|default:"0" }}%</div>
+    </div>
+    <div class="stat-icon primary"><i class="fas fa-users"></i></div>
+  </div>
+  <div class="stat-card success">
+    <div class="stat-info">
+      <h3>Active Users</h3>
+      <div class="stat-value">{{ active_users|default:"0" }}</div>
+      <div class="stat-change positive"><i class="fas fa-arrow-up"></i> {{ active_users_change|default:"0" }}%</div>
+    </div>
+    <div class="stat-icon success"><i class="fas fa-user-check"></i></div>
+  </div>
+  <div class="stat-card info">
+    <div class="stat-info">
+      <h3>New This Month</h3>
+      <div class="stat-value">{{ new_users_month|default:"0" }}</div>
+      <div class="stat-change positive"><i class="fas fa-arrow-up"></i> {{ new_users_month_change|default:"0" }}%</div>
+    </div>
+    <div class="stat-icon info"><i class="fas fa-user-plus"></i></div>
+  </div>
+  <div class="stat-card danger">
+    <div class="stat-info">
+      <h3>Suspended</h3>
+      <div class="stat-value">{{ suspended_users|default:"0" }}</div>
+      <div class="stat-change negative"><i class="fas fa-arrow-down"></i> {{ suspended_users_change|default:"0" }}%</div>
+    </div>
+    <div class="stat-icon danger"><i class="fas fa-user-slash"></i></div>
+  </div>
+</div>
+
+<!-- Filters & Table -->
+<div class="card">
+  <div class="card-header">
+    <h3>All Users <span style="font-weight:400;color:var(--text-muted);font-size:0.8rem">(<span id="totalUsersCount">0</span> results)</span></h3>
+  </div>
+  <div class="card-body">
+    <div class="user-filters">
+      <div class="search-input" style="position:relative;flex:1;min-width:200px">
+        <i class="fas fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.8rem"></i>
+        <input type="text" id="userSearch" class="form-control" placeholder="Search by name, email, or ID..." style="padding-left:36px">
+      </div>
+      <select id="statusFilter" class="form-select">
+        <option value="">All Status</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+        <option value="suspended">Suspended</option>
+      </select>
+      <select id="subscriptionFilter" class="form-select">
+        <option value="">All Plans</option>
+        <option value="Free">Free</option>
+        <option value="Basic">Basic</option>
+        <option value="Pro">Pro</option>
+        <option value="Enterprise">Enterprise</option>
+      </select>
+      <button class="btn btn-secondary btn-sm" onclick="UserManager.exportUsers('json')"><i class="fas fa-file-export"></i> JSON</button>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Status</th>
+            <th>Plan</th>
+            <th>Posters</th>
+            <th>Registered</th>
+            <th>Last Active</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="usersTableBody">
+          {% for profile in profiles %}
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:12px">
+                {% if profile.profile_picture %}
+                <img src="{{ profile.profile_picture.url }}" alt="{{ profile.user.first_name }}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--border-light);box-shadow:0 2px 8px rgba(0,0,0,0.08);flex-shrink:0;">
+                {% else %}
+                <img src="https://ui-avatars.com/api/?name={{ profile.user.first_name|default:profile.user.username|default:'U'|urlencode }}&background=7C3AED&color=fff&size=128&bold=true" alt="{{ profile.user.first_name }}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--border-light);box-shadow:0 2px 8px rgba(0,0,0,0.08);flex-shrink:0;">
+                {% endif %}
+                <div>
+                  <div style="font-weight:600;color:var(--text-primary)">{{ profile.user.first_name }} {{ profile.user.last_name }}</div>
+                  <div style="font-size:0.75rem;color:var(--text-muted)">{{ profile.user.email }} | {{ profile.mobile_number }}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="badge badge-success">Active</span></td>
+            <td><span class="badge badge-primary">{{ profile.subscription.plan_name|default:"Free" }}</span></td>
+            <td style="font-weight:600">0</td>
+            <td style="color:var(--text-secondary)">{{ profile.created_at|date:"d M Y" }}</td>
+            <td style="color:var(--text-secondary)">{{ profile.user.last_login|date:"d M Y"|default:"Never" }}</td>
+            <td>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-icon btn-outline" title="Edit" onclick="UserManager.editUser('{{ profile.id }}')"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-icon btn-outline" title="View" onclick="UserManager.viewUser('{{ profile.id }}')"><i class="fas fa-eye"></i></button>
+                <button class="btn btn-icon btn-outline" style="color:var(--danger)" title="Suspend" onclick="UserManager.suspendUser('{{ profile.id }}')"><i class="fas fa-ban"></i></button>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted)">
+              No users registered yet.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% include 'dashboard/includes/pagination.html' %}
+
+      </div>
+</div>
+</div>
+
+<!-- User Profile Side Panel -->
+<div class="user-profile-panel" id="userProfilePanel">
+<div class="profile-panel-header">
+  <h3>User Profile</h3>
+  <button class="modal-close" onclick="UserManager.closePanel()"><i class="fas fa-times"></i></button>
+</div>
+<div class="profile-panel-body"></div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal-overlay" id="addUserModal">
+<div class="modal">
+  <div class="modal-header">
+    <h3>Add New User</h3>
+    <button class="modal-close" onclick="Modal.close('addUserModal')"><i class="fas fa-times"></i></button>
+  </div>
+  <form method="POST" action="{% url 'users' %}">
+    {% csrf_token %}
+    <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+      <div class="form-group">
+        <label class="form-label">First Name <span style="color:var(--danger)">*</span></label>
+        <input type="text" name="first_name" class="form-control" placeholder="Enter first name" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Last Name</label>
+        <input type="text" name="last_name" class="form-control" placeholder="Enter last name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" name="email" class="form-control" placeholder="Enter email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mobile Number <span style="color:var(--danger)">*</span></label>
+        <input type="text" name="mobile_number" class="form-control" placeholder="Enter mobile number" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password <span style="color:var(--danger)">*</span></label>
+        <input type="password" name="password" class="form-control" placeholder="Enter password" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date of Birth</label>
+        <input type="date" name="date_of_birth" class="form-control">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Business Name</label>
+        <input type="text" name="business_name" class="form-control" placeholder="Enter business name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Business Category</label>
+        <select name="business_category" class="form-select">
+          <option value="">Select Category</option>
+          {% for category in categories %}
+          <option value="{{ category.id }}">{{ category.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Business Type</label>
+        <select name="business_type" class="form-control" multiple style="min-height: 100px;">
+          {% for type in business_types %}
+          <option value="{{ type.id }}">{{ type.name }}</option>
+          {% endfor %}
+        </select>
+        <small class="form-text text-muted" style="font-size: 0.75rem; color: var(--text-muted);">Hold Ctrl/Cmd to select multiple types</small>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Subscription Plan</label>
+        <select name="subscription_plan" class="form-select">
+          {% for plan in subscription_plans %}
+          <option value="{{ plan.name }}">{{ plan.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea name="notes" class="form-control" rows="3" placeholder="Optional notes..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="Modal.close('addUserModal')">Cancel</button>
+      <button type="submit" class="btn btn-primary">Create User</button>
+    </div>
+  </form>
+</div>
+</div>
+<!-- Edit User Modal -->
+<div class="modal-overlay" id="editUserModal">
+<div class="modal">
+  <div class="modal-header">
+    <h3>Edit User</h3>
+    <button class="modal-close" onclick="Modal.close('editUserModal')"><i class="fas fa-times"></i></button>
+  </div>
+  <form method="POST" action="{% url 'users' %}">
+    {% csrf_token %}
+    <input type="hidden" name="profile_id" id="edit_profile_id">
+    <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+      <div class="form-group">
+        <label class="form-label">First Name <span style="color:var(--danger)">*</span></label>
+        <input type="text" name="first_name" id="edit_first_name" class="form-control" placeholder="Enter first name" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Last Name</label>
+        <input type="text" name="last_name" id="edit_last_name" class="form-control" placeholder="Enter last name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" name="email" id="edit_email" class="form-control" placeholder="Enter email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mobile Number <span style="color:var(--danger)">*</span></label>
+        <input type="text" name="mobile_number" id="edit_mobile_number" class="form-control" placeholder="Enter mobile number" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" id="edit_password" class="form-control" placeholder="Leave blank to keep current password">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date of Birth</label>
+        <input type="date" name="date_of_birth" id="edit_date_of_birth" class="form-control">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Business Name</label>
+        <input type="text" name="business_name" id="edit_business_name" class="form-control" placeholder="Enter business name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Business Category</label>
+        <select name="business_category" id="edit_business_category" class="form-select">
+          <option value="">Select Category</option>
+          {% for category in categories %}
+          <option value="{{ category.id }}">{{ category.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Business Type</label>
+        <select name="business_type" id="edit_business_type" class="form-control" multiple style="min-height: 100px;">
+          {% for type in business_types %}
+          <option value="{{ type.id }}">{{ type.name }}</option>
+          {% endfor %}
+        </select>
+        <small class="form-text text-muted" style="font-size: 0.75rem; color: var(--text-muted);">Hold Ctrl/Cmd to select multiple types</small>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Subscription Plan</label>
+        <select name="subscription_plan" id="edit_subscription_plan" class="form-select">
+          {% for plan in subscription_plans %}
+          <option value="{{ plan.name }}">{{ plan.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea name="notes" id="edit_notes" class="form-control" rows="3" placeholder="Optional notes..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="Modal.close('editUserModal')">Cancel</button>
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+    </div>
+  </form>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script id="profiles-data" type="application/json">
+{
+  {% for p in profiles %}
+  "{{ p.id }}": {
+    "first_name": "{{ p.user.first_name|escapejs }}",
+    "last_name": "{{ p.user.last_name|escapejs }}",
+    "email": "{{ p.user.email|escapejs }}",
+    "mobile_number": "{{ p.mobile_number|escapejs }}",
+    "date_of_birth": "{{ p.date_of_birth|date:'Y-m-d'|default:'' }}",
+    "business_name": "{{ p.business_name|escapejs }}",
+    "business_category": "{{ p.business_category.id|default:'' }}",
+    "business_type": [{% for t in p.business_types.all %}"{{ t.id }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+    "avatar": "{% if p.profile_picture %}{{ p.profile_picture.url|escapejs }}{% else %}https://ui-avatars.com/api/?name={{ p.user.first_name|default:p.user.username|default:'U'|urlencode }}&background=7C3AED&color=fff&size=256&bold=true{% endif %}",
+    "plan": "{{ p.subscription.plan_name|default:'Free'|escapejs }}",
+    "registered": "{{ p.created_at|date:'d M Y' }}"
+  }{% if not forloop.last %},{% endif %}
+  {% endfor %}
+}
+</script>
+<script>
+const UserManager = {
+  exportUsers(type) {
+    Toast.show(`Exporting users to ${type.toUpperCase()}...`, 'info');
+    // Implement actual export logic here
+  },
+  closePanel() {
+    const panel = document.getElementById('userProfilePanel');
+    if (panel) panel.classList.remove('active');
+  },
+  editUser(id) {
+    const profilesData = JSON.parse(document.getElementById('profiles-data').textContent);
+    const data = profilesData[id];
+    if(data) {
+      document.getElementById('edit_profile_id').value = id;
+      document.getElementById('edit_first_name').value = data.first_name || '';
+      document.getElementById('edit_last_name').value = data.last_name || '';
+      document.getElementById('edit_email').value = data.email || '';
+      document.getElementById('edit_mobile_number').value = data.mobile_number || '';
+      document.getElementById('edit_date_of_birth').value = data.date_of_birth || '';
+      document.getElementById('edit_business_name').value = data.business_name || '';
+      document.getElementById('edit_business_category').value = data.business_category || '';
+      
+      const typeSelect = document.getElementById('edit_business_type');
+      for (let i = 0; i < typeSelect.options.length; i++) {
+        typeSelect.options[i].selected = data.business_type.includes(typeSelect.options[i].value);
+      }
+      
+      Modal.open('editUserModal');
+    }
+  },
+  viewUser(id) {
+    const profilesData = JSON.parse(document.getElementById('profiles-data').textContent);
+    const data = profilesData[id];
+    const panel = document.getElementById('userProfilePanel');
+    if (panel && data) {
+      panel.classList.add('active');
+      const body = panel.querySelector('.profile-panel-body');
+      body.innerHTML = `
+        <div style="padding: 24px; text-align: center;">
+          <img src="${data.avatar}" style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 14px;">
+          <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin: 0 0 4px;">${data.first_name} ${data.last_name}</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0 0 14px;">${data.email}</p>
+          <span class="badge badge-primary" style="font-size: 0.8rem; padding: 5px 12px; margin-bottom: 20px; display: inline-block;">${data.plan} Plan</span>
+          
+          <div style="text-align: left; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-top: 8px;">
+            <div style="margin-bottom: 12px;">
+              <strong style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">Mobile Number</strong>
+              <div style="font-weight: 600; color: var(--text-primary); margin-top: 2px;">${data.mobile_number || 'N/A'}</div>
+            </div>
+            <div style="margin-bottom: 12px;">
+              <strong style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">Business Name</strong>
+              <div style="font-weight: 600; color: var(--text-primary); margin-top: 2px;">${data.business_name || 'Not specified'}</div>
+            </div>
+            <div>
+              <strong style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">Registered On</strong>
+              <div style="font-weight: 600; color: var(--text-primary); margin-top: 2px;">${data.registered}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  },
+  suspendUser(id) {
+    if (confirm('Are you sure you want to suspend this user?')) {
+      Toast.show(`User ID ${id} suspended successfully`, 'warning');
+    }
+  }
+};
+</script>
+{% endblock %}

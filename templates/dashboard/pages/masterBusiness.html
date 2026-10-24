@@ -1,0 +1,130 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Master Business Types</h1>
+    <div class="breadcrumb"><a href="{% url 'dashboard' %}">Dashboard</a><i class="fas fa-chevron-right"></i><span>Master</span><i class="fas fa-chevron-right"></i><span>Business</span></div>
+  </div>
+  <div class="page-actions">
+    <button class="btn btn-primary" onclick="openMasterModal()"><i class="fas fa-plus"></i> Add Business Type</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3>All Business Types</h3>
+  </div>
+  <div class="card-body">
+    <div style="display:flex;gap:12px;margin-bottom:20px;">
+      <div class="search-input" style="position:relative;flex:1;max-width:300px">
+        <i class="fas fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.8rem"></i>
+        <input type="text" id="searchInput" class="form-control" placeholder="Search businesses..." style="padding-left:36px">
+      </div>
+    </div>
+    <div class="table-container">
+      <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>#{{ forloop.counter0|add:page_obj.start_index }}</td>
+          <td style="font-weight:600">{{ item.name }}</td>
+          <td>{{ item.description|truncatechars:50 }}</td>
+          <td>
+            {% if item.is_active %}
+            <span class="badge badge-success">Active</span>
+            {% else %}
+            <span class="badge badge-danger">Inactive</span>
+            {% endif %}
+          </td>
+          <td>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-icon btn-outline" title="Edit" onclick="openMasterModal('{{ item.id }}')"><i class="fas fa-edit"></i></button>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">No records found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+    {% include 'dashboard/includes/pagination.html' %}
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="masterModal">
+<div class="modal">
+  <div class="modal-header">
+    <h3 id="modalTitle">Add Business Type</h3>
+    <button class="modal-close" onclick="Modal.close('masterModal')"><i class="fas fa-times"></i></button>
+  </div>
+  <form method="POST" action="{% url 'masterBusiness' %}">
+    {% csrf_token %}
+    <input type="hidden" name="id" id="item_id">
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Name <span style="color:var(--danger)">*</span></label>
+        <input type="text" name="name" id="item_name" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea name="description" id="item_description" class="form-control" rows="3"></textarea>
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px;margin-top:10px">
+        <input type="checkbox" name="is_active" id="item_is_active" checked>
+        <label for="item_is_active" style="margin:0">Is Active</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="Modal.close('masterModal')">Cancel</button>
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+    </div>
+  </form>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script id="items-data" type="application/json">
+{
+  {% for item in items %}
+  "{{ item.id }}": {
+    "name": "{{ item.name|escapejs }}",
+    "description": "{{ item.description|escapejs }}",
+    "is_active": {{ item.is_active|yesno:"true,false" }}
+  }{% if not forloop.last %},{% endif %}
+  {% endfor %}
+}
+</script>
+<script>
+function openMasterModal(id) {
+  if (id) {
+    const data = JSON.parse(document.getElementById('items-data').textContent)[id];
+    document.getElementById('modalTitle').innerText = 'Edit Business Type';
+    document.getElementById('item_id').value = id;
+    document.getElementById('item_name').value = data.name;
+    document.getElementById('item_description').value = data.description;
+    document.getElementById('item_is_active').checked = data.is_active;
+  } else {
+    document.getElementById('modalTitle').innerText = 'Add Business Type';
+    document.getElementById('item_id').value = '';
+    document.getElementById('item_name').value = '';
+    document.getElementById('item_description').value = '';
+    document.getElementById('item_is_active').checked = true;
+  }
+  Modal.open('masterModal');
+}
+</script>
+{% endblock %}

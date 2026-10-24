@@ -1,0 +1,68 @@
+{% extends "user_dashboard/base.html" %}
+{% load static %}
+
+{% block title %}Trending Templates{% endblock %}
+
+{% block active_trending %}active{% endblock %}
+
+{% block header_title %}
+<h2>Trending Templates</h2>
+<p>Discover popular poster designs</p>
+{% endblock %}
+
+{% block content %}
+<section class="page-section active">
+    {% if selected_category %}
+    <div style="margin-bottom: 22px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; background: var(--bg-card); padding: 14px 20px; border-radius: 16px; border: 1px solid var(--border-light); box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+        <a href="{% url 'user_dashboard:categories' %}" class="btn-back-categories" style="display: inline-flex; align-items: center; gap: 8px; background: rgba(124, 58, 237, 0.08); color: var(--primary); border: 1px solid rgba(124, 58, 237, 0.22); border-radius: var(--radius-full); padding: 8px 18px; font-size: 0.88rem; font-weight: 600; text-decoration: none; transition: all 0.2s; box-shadow: 0 2px 6px rgba(124, 58, 237, 0.05);">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <span>Back to Categories Studio</span>
+        </a>
+        
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <span style="font-size: 0.88rem; font-weight: 600; color: var(--text-main);">Active Topic Filter: <strong style="color: var(--primary); font-size: 0.96rem;">{{ selected_category }}</strong></span>
+            <a href="{% url 'user_dashboard:trending' %}" style="text-decoration: none; font-size: 0.76rem; font-weight: 700; color: #dc2626; background: rgba(220, 38, 38, 0.08); padding: 6px 14px; border-radius: var(--radius-full); border: 1px solid rgba(220, 38, 38, 0.22); transition: all 0.2s;">✕ Clear Filter</a>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="section-header" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px;">
+        <h3 style="margin: 0;">
+            {% if selected_category %}🗂️ Designs & Templates for: <span style="color: var(--primary);">{{ selected_category }}</span>{% else %}🔥 Trending Now{% endif %}
+        </h3>
+    </div>
+
+    <div class="templates-grid">
+        {% for template in trending_templates %}
+        <div class="card template-card">
+            <div class="template-card-image">
+                <img src="{{ template.image_url }}" alt="{{ template.title }}" loading="lazy">
+                <span class="template-card-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    {{ template.badge|default:"Trending" }}
+                </span>
+            </div>
+            <div class="template-card-body">
+                <h4>{{ template.title }}</h4>
+                <div class="template-card-footer">
+                    <span class="uses">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        {{ template.uses_count }} uses
+                    </span>
+                    <a href="{% url 'user_dashboard:ai_generation' %}?template_id={{ template.id }}&title={{ template.title|urlencode }}&ref_image={{ template.image_url|urlencode }}" class="btn btn-primary btn-sm">Use Template</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state" style="grid-column: 1 / -1;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <h4>No trending templates yet</h4>
+            <p>Check back soon — fresh templates are added every week.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% include 'user_dashboard/includes/pagination.html' %}
+</section>
+{% endblock %}

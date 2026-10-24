@@ -1,0 +1,688 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sanghi Industries — Design at the speed of thought .</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="{% static 'webportal/css/style.css' %}?v=2" />
+</head>
+
+<body>
+
+  <!-- nihalpandit000@gmail.com    -->
+
+  <div class="grain"></div>
+  <div class="scroll-progress">
+    <div class="scroll-progress-bar"></div>
+  </div>
+
+  <header class="site-header">
+    <a href="#top" class="brand">
+      <img src="{% static 'webportal/images/logo.png' %}" alt="Sanghi Logo" class="brand-logo">
+    </a>
+    <nav class="main-nav">
+      <a href="#how-it-works" data-nav>How it works</a>
+      <a href="#showcase" data-nav>Showcase</a>
+      <a href="#about" data-nav>About</a>
+      <a href="#pricing" data-nav>Pricing</a>
+      <a href="#faq" data-nav>FAQ</a>
+    </nav>
+    <a href="{% if user.is_authenticated %}{% url 'user_dashboard:trending' %}{% else %}{% url 'user_dashboard:login' %}{% endif %}" class="btn-primary magnetic">Start creating</a>
+  </header>
+
+  <main id="top">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <div class="hero-background-gallery" aria-hidden="true">
+        <div class="gallery-column column-down">
+          <img src="{% static 'webportal/images/card1.png' %}" alt="">
+          <img src="{% static 'webportal/images/card2.png' %}" alt="">
+          <img src="{% static 'webportal/images/card3.png' %}" alt="">
+
+          <!-- Duplicated for infinite scroll -->
+
+          <img src="{% static 'webportal/images/card1.png' %}" alt="">
+          <img src="{% static 'webportal/images/card2.png' %}" alt="">
+          <img src="{% static 'webportal/images/card3.png' %}" alt="">
+        </div>
+        <div class="gallery-column column-up">
+          <img src="{% static 'webportal/images/card4.png' %}" alt="">
+          <img src="{% static 'webportal/images/card5.png' %}" alt="">
+          <img src="{% static 'webportal/images/card6.png' %}" alt="">
+
+          <!-- Duplicated for infinite scroll -->
+
+          <img src="{% static 'webportal/images/card4.png' %}" alt="">
+          <img src="{% static 'webportal/images/card5.png' %}" alt="">
+          <img src="{% static 'webportal/images/card6.png' %}" alt="">
+        </div>
+        <div class="gallery-column column-down">
+          <img src="{% static 'webportal/images/card7.png' %}" alt="">
+          <img src="{% static 'webportal/images/card8.png' %}" alt="">
+          <img src="{% static 'webportal/images/diwali.png' %}" alt="">
+
+          <!-- Duplicated for infinite scroll -->
+
+          <img src="{% static 'webportal/images/card7.png' %}" alt="">
+          <img src="{% static 'webportal/images/card8.png' %}" alt="">
+          <img src="{% static 'webportal/images/diwali.png' %}" alt="">
+        </div>
+        <div class="gallery-column column-up hide-mobile">
+          <img src="{% static 'webportal/images/poster_realestate_1782548883838.png' %}" alt="">
+          <img src="{% static 'webportal/images/poster_food_1782548924976.png' %}" alt="">
+          <img src="{% static 'webportal/images/poster_tech_1782548906480.png' %}" alt="">
+
+          <!-- Duplicated for infinite scroll -->
+
+          <img src="{% static 'webportal/images/poster_realestate_1782548883838.png' %}" alt="">
+          <img src="{% static 'webportal/images/poster_food_1782548924976.png' %}" alt="">
+          <img src="{% static 'webportal/images/poster_tech_1782548906480.png' %}" alt="">
+        </div>
+        <div class="gallery-column column-down hide-tablet">
+          <img src="{% static 'webportal/images/Excel_academy.png' %}" alt="">
+          <img src="{% static 'webportal/images/aurelia.png' %}" alt="">
+          <img src="{% static 'webportal/images/modi.png' %}" alt="">
+
+          <!-- Duplicated for infinite scroll -->
+
+          <img src="{% static 'webportal/images/Excel_academy.png' %}" alt="">
+          <img src="{% static 'webportal/images/aurelia.png' %}" alt="">
+          <img src="{% static 'webportal/images/modi.png' %}" alt="">
+        </div>
+      </div>
+
+      <div class="hero-content-glass">
+        <h1 class="reveal-up">Design at the<br>speed of thought .</h1>
+        <p class="hero-subtitle reveal-up">Describe the poster you need in one line. Sanghi turns it into a finished,
+          on-brand creative — sized for Instagram, WhatsApp Status, or print — before you'd have finished briefing a
+          designer.</p>
+        <div class="hero-actions reveal-up">
+          <a href="{% if user.is_authenticated %}{% url 'user_dashboard:trending' %}{% else %}{% url 'user_dashboard:login' %}{% endif %}" class="btn-primary large magnetic">Start creating</a>
+          <a href="#how-it-works" class="btn-ghost magnetic">See how it works<span class="arrow">→</span></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TRUST / STAT BAR ============ -->
+    <section class="stat-bar">
+      <div class="stat-item">
+        <span class="stat-number" data-count="4">0</span>
+        <span class="stat-label">Signature aesthetics, built in</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number" data-count="12" data-suffix="+">0</span>
+        <span class="stat-label">Export sizes from one design</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number" data-count="2" data-suffix=" min">0</span>
+        <span class="stat-label">Average time, prompt to export</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number" data-count="100" data-suffix="%">0</span>
+        <span class="stat-label">Brand-matched, every output</span>
+      </div>
+    </section>
+
+    <!-- ============ HOW IT WORKS ============ -->
+    <section class="process-section" id="how-it-works">
+      <div class="section-head">
+        <p class="eyebrow"><span class="reg-mark">+</span> The process</p>
+        <h2>Four steps. No design degree.</h2>
+        <p class="section-sub">Every poster moves through the same short path — from a rough idea to a file your team
+          can actually post.</p>
+      </div>
+
+      <svg class="process-line" viewBox="0 0 1000 4" preserveAspectRatio="none" aria-hidden="true">
+        <line x1="0" y1="2" x2="1000" y2="2" stroke="var(--mist-dark)" stroke-width="2" />
+        <line class="process-line-draw" x1="0" y1="2" x2="1000" y2="2" stroke="var(--press)" stroke-width="2" />
+      </svg>
+
+      <div class="process-grid">
+        <div class="process-step">
+          <span class="plate-num">01</span>
+          <div class="process-img"><img src="{% static 'webportal/images/step1.png' %}" alt="Prompt to poster interface"></div>
+          <h3>Write the idea.</h3>
+          <p>Describe the occasion, tone, and language in a sentence. Sanghi converts it into clean creative direction —
+            layout, copy hierarchy, and mood — before it renders anything.</p>
+        </div>
+        <div class="process-step">
+          <span class="plate-num">02</span>
+          <div class="process-img"><img src="{% static 'webportal/images/step2.png' %}" alt="Brand kit applied to poster"></div>
+          <h3>Apply the brand.</h3>
+          <p>Your logo, palette, and contact details attach automatically. Every poster looks like it left the same
+            studio — because it did.</p>
+        </div>
+        <div class="process-step">
+          <span class="plate-num">03</span>
+          <div class="process-img"><img src="{% static 'webportal/images/step3.png' %}" alt="Multiple poster layout variations">
+          </div>
+          <h3>Choose a direction.</h3>
+          <p>Each prompt returns a small set of genuinely different layouts, not one safe default. Pick the one that
+            fits the moment, not the algorithm.</p>
+        </div>
+        <div class="process-step">
+          <span class="plate-num">04</span>
+          <div class="process-img"><img src="{% static 'webportal/images/step4.png' %}" alt="Export ready poster sizes"></div>
+          <h3>Ship it everywhere.</h3>
+          <p>Post, story, WhatsApp Status, or print-ready PDF — export every size your team needs from the one approved
+            design.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SHOWCASE (organic rows) ============ -->
+    <section class="showcase-section" id="showcase">
+      <div class="section-head">
+        <p class="eyebrow"><span class="reg-mark">+</span> Specimen plates</p>
+        <h2>Four categories. Each with its own language.</h2>
+        <p class="section-sub">A poster for a festival sale and a poster for a luxury listing shouldn't look related.
+          Sanghi keeps the categories distinct on purpose.</p>
+      </div>
+
+      <div class="organic-row">
+        <div class="text-block" data-speed="1.1">
+          <span class="plate-num">Plate №01 — Luxury Real Estate</span>
+          <h2>Properties worth pausing for.</h2>
+          <p>Architectural posters built for the scroll-stopping listing — restrained type, real light, and just enough
+            copy to close. No stock-photo gloss.</p>
+        </div>
+        <div class="image-block card-reveal">
+          <img src="{% static 'webportal/images/banner_realestate_final_1782551785570.png' %}"
+            alt="Luxury real estate poster — Luxury Living">
+        </div>
+      </div>
+
+      <div class="organic-row reverse">
+        <div class="text-block" data-speed="1.1">
+          <span class="plate-num">Plate №02 — Hotels &amp; , Resort</span>
+          <h2>Command the crowd.</h2>
+          <p>A premium luxury hotel booking card highlighting elegant rooms, skyline views, exclusive offers, and a
+            strong "Book Now" call-to-action.</p>
+        </div>
+        <div class="image-block card-reveal landscape-card">
+          <img src="{% static 'webportal/images/grand.png' %}" alt="Music festival poster — Festival Music">
+        </div>
+      </div>
+
+      <div class="organic-row">
+        <div class="text-block" data-speed="1.1">
+          <span class="plate-num">Plate №03 — Product Launches</span>
+          <h2>The future, given a launch date.</h2>
+          <p>Sleek, confident graphics for software and hardware reveals — a register of design that signals the product
+            was worth waiting for.</p>
+        </div>
+        <div class="image-block card-reveal">
+          <img src="{% static 'webportal/images/future.png' %}" alt="Tech product launch poster — The Future">
+        </div>
+      </div>
+
+      <div class="organic-row reverse">
+        <div class="text-block" data-speed="1.1">
+          <span class="plate-num">Plate №04 — Fine Dining</span>
+          <h2>Taste, before they've tasted it.</h2>
+          <p>Moody, editorial restaurant promotions where the plating does the talking and the type knows to stay out of
+            the way.</p>
+        </div>
+        <div class="image-block card-reveal">
+          <img src="{% static 'webportal/images/banner_food_final_1782551822748.png' %}" alt="Fine dining poster — Exquisite">
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CAPABILITIES GRID ============ -->
+    <section class="capabilities" id="capabilities">
+      <div class="cap-header">
+        <p class="eyebrow"><span class="reg-mark">+</span> Range</p>
+        <h2>Master any aesthetic.</h2>
+        <p>From hand-lettered festival greetings to crisp, corporate sale announcements — same engine, entirely
+          different visual vocabulary.</p>
+      </div>
+      <div class="fluid-grid">
+        <div class="fluid-item featured-item"><img src="{% static 'webportal/images/aurelia.png' %}"
+            alt="Aurelia Apartment Poster">
+        </div>
+        <div class="fluid-item slim-item"><img src="{% static 'webportal/images/poster_food_1782548924976.png' %}"
+            alt="Restaurant poster"></div>
+        <div class="fluid-item"><img src="{% static 'webportal/images/diwali.png' %}" alt="Diwali offer poster">
+        </div>
+        <div class="fluid-item"><img src="{% static 'webportal/images/Excel_academy.png' %}" alt="Excel Academy Poster">
+        </div>
+        <div class="fluid-item"><img src="{% static 'webportal/images/modi.png' %}" alt="Social media growth poster"></div>
+      </div>
+    </section>
+
+    <!-- ============ GALLERY (horizontal scroll) ============ -->
+    <section class="gallery-section" id="gallery">
+      <div class="gallery-header">
+        <p class="eyebrow"><span class="reg-mark">+</span> Endless possibilities</p>
+        <h2>A glimpse into the run.</h2>
+        <p class="section-sub">Drag, or keep scrolling — every plate below was produced the same way as everything above
+          it.</p>
+      </div>
+      <div class="gallery-track">
+        <div class="gallery-item"><img src="{% static 'webportal/images/card1.png' %}" alt="Wedding invitation poster"></div>
+        <div class="gallery-item"><img src="{% static 'webportal/images/card2.png' %}" alt="Diwali greeting poster"></div>
+        <div class="gallery-item"><img src="{% static 'webportal/images/card3.png' %}" alt="Business sale poster"></div>
+        <div class="gallery-item"><img src="{% static 'webportal/images/card4.png' %}" alt="Independence Day poster"></div>
+        <div class="gallery-item"><img src="{% static 'webportal/images/card5.png' %}" alt="Music night poster"></div>
+        <div class="gallery-item"><img src="{% static 'webportal/images/card6.png' %}" alt="Festive offer poster"></div>
+        <div class="gallery-item"><img src="{% static 'webportal/images/card7.png' %}" alt="Public campaign poster"></div>
+        <div class="gallery-item"><img src="{% static 'webportal/images/card8.png' %}" alt="Social growth poster"></div>
+      </div>
+    </section>
+
+    <!-- ============ ABOUT / PROFILE ============ -->
+    <section class="about-section" id="about">
+      <div class="section-head">
+        <p class="eyebrow"><span class="reg-mark">+</span> About the studio</p>
+        <h2>We used to run a print shop, not a startup.</h2>
+      </div>
+
+      <div class="about-grid">
+        <div class="about-copy">
+          <p class="lede">Before Sanghi was software, it was a request that came in every Tuesday from a sweets shop two
+            streets over: "can you make us something for the weekend sale, today." We learned the rhythm of
+            small-business marketing the slow way — one rushed festival order at a time.</p>
+          <p>Sanghi exists because that rhythm hasn't changed, even though the tools around it have. Most design
+            software still assumes you have a week and a designer. We built this for the version of the job that
+            actually happens: an idea at 9am, a poster by 9:15, and a brand that still looks like itself by the fiftieth
+            design.</p>
+
+          <blockquote class="pull-quote">"A poster is a small promise to whoever stops scrolling. We make sure it keeps
+            that promise — on time, and on brand."</blockquote>
+
+          <div class="principles">
+            <div class="principle">
+              <span class="principle-num">01</span>
+              <h4>Brand-true by default</h4>
+              <p>Your colours and logo aren't an afterthought layer — they're part of how each layout is built.</p>
+            </div>
+            <div class="principle">
+              <span class="principle-num">02</span>
+              <h4>Built around India's calendar</h4>
+              <p>Festivals, sale seasons, and regional language all ship as first-class presets, not workarounds.</p>
+            </div>
+            <div class="principle">
+              <span class="principle-num">03</span>
+              <h4>Fast enough to use today</h4>
+              <p>If it doesn't save you time on the poster you need this afternoon, it doesn't ship.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="about-visual">
+          <img src="{% static 'webportal/images/many_poster.png' %}"
+            alt="One brand, many posters — brand kit applied across formats">
+          <div class="team-strip">
+            <div class="team-card">
+              <span class="avatar" style="--av-a:#C23B22; --av-b:#7A2114;">AS</span>
+              <div>
+                <strong>Aarav Sanghi</strong>
+                <span>Founder &amp; Creative Director</span>
+              </div>
+            </div>
+            <div class="team-card">
+              <span class="avatar" style="--av-a:#14141A; --av-b:#3A3A44;">RM</span>
+              <div>
+                <strong>Riya Mehta</strong>
+                <span>Head of Brand Systems</span>
+              </div>
+            </div>
+            <div class="team-card">
+              <span class="avatar" style="--av-a:#66646F; --av-b:#9A98A2;">KP</span>
+              <div>
+                <strong>Kabir Patel</strong>
+                <span>Lead Engineer</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TESTIMONIALS ============ -->
+    <section class="testimonials-section">
+      <div class="section-head">
+        <p class="eyebrow"><span class="reg-mark">+</span> In the field</p>
+        <h2>Teams who post for a living.</h2>
+      </div>
+      <div class="testimonial-grid">
+        <figure class="testimonial-card">
+          <blockquote>Our listings used to wait two days for a designer. Now our agents make the poster themselves
+            before the photographer's even left the property.</blockquote>
+          <figcaption><span class="avatar" style="--av-a:#C23B22; --av-b:#7A2114;">PR</span>
+            <div><strong>Priya Raghavan</strong><span>Marketing Lead, Coastline Realty</span></div>
+          </figcaption>
+        </figure>
+        <figure class="testimonial-card">
+          <blockquote>Every event we run needs ten variations of the same announcement by lunchtime. This is the first
+            tool that gives us ten that actually look different.</blockquote>
+          <figcaption><span class="avatar" style="--av-a:#14141A; --av-b:#3A3A44;">DN</span>
+            <div><strong>Devika Nair</strong><span>Founder, Nair &amp; Co. Events</span></div>
+          </figcaption>
+        </figure>
+        <figure class="testimonial-card">
+          <blockquote>The brand kit is the whole pitch for us. Nobody on staff has to remember our hex codes anymore —
+            the posters just arrive correct.</blockquote>
+          <figcaption><span class="avatar" style="--av-a:#66646F; --av-b:#9A98A2;">AV</span>
+            <div><strong>Aman Verma</strong><span>Social Media Manager, Forkful Bistro</span></div>
+          </figcaption>
+        </figure>
+        <figure class="testimonial-card">
+          <blockquote>We onboard new clients onto Sanghi in the first week now. It's become part of how we pitch
+            creative turnaround time.</blockquote>
+          <figcaption><span class="avatar" style="--av-a:#C23B22; --av-b:#7A2114;">SJ</span>
+            <div><strong>Saurabh Joshi</strong><span>Growth, Pixel &amp; Pine Studio</span></div>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ============ FEATURE BREAKDOWN ============ -->
+    <section class="features-section">
+      <div class="section-head">
+        <p class="eyebrow"><span class="reg-mark">+</span> What's inside</p>
+        <h2>Built deeper than it needs to look.</h2>
+      </div>
+      <div class="feature-grid">
+        <div class="feature-tile">
+          <span class="feature-icon">◧</span>
+          <h4>Brand kit memory</h4>
+          <p>Save logo, palette, and contact line once. Every future poster pulls from the same kit automatically.</p>
+        </div>
+        <div class="feature-tile">
+          <span class="feature-icon">▢</span>
+          <h4>Multi-format export</h4>
+          <p>Feed, Story, WhatsApp Status, and print-ready PDF — generated together from a single approved layout.</p>
+        </div>
+        <div class="feature-tile">
+          <span class="feature-icon">あ</span>
+          <h4>Bilingual copy</h4>
+          <p>Write the brief in English or Hindi, and get poster copy that reads naturally in either — or both.</p>
+        </div>
+        <div class="feature-tile">
+          <span class="feature-icon">◫</span>
+          <h4>Real layout variation</h4>
+          <p>Each prompt returns distinct compositions, not the same template with a different photo dropped in.</p>
+        </div>
+        <div class="feature-tile">
+          <span class="feature-icon">◷</span>
+          <h4>Festival &amp; sale presets</h4>
+          <p>Diwali, Independence Day, EOSS, and regional dates ship as ready presets, tuned ahead of the calendar.</p>
+        </div>
+        <div class="feature-tile">
+          <span class="feature-icon">⌘</span>
+          <h4>Shared team workspaces</h4>
+          <p>One brand kit, one asset library, any number of teammates generating from the same source of truth.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FAQ ============ -->
+    <section class="faq-section" id="faq">
+      <div class="section-head">
+        <p class="eyebrow"><span class="reg-mark">+</span> Questions</p>
+        <h2>Before you start.</h2>
+      </div>
+      <div class="faq-list">
+        <div class="faq-item">
+          <button class="faq-q">Do I need design experience to use Sanghi?<span class="faq-icon"></span></button>
+          <div class="faq-a">
+            <p>No. You write a short brief in plain language — what it's for, the tone, any key details — and Sanghi
+              handles layout, hierarchy, and typography. Most first posters are finished in under five minutes.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">What file formats and sizes can I export?<span class="faq-icon"></span></button>
+          <div class="faq-a">
+            <p>Every poster exports as a feed post, a 9:16 story, a WhatsApp Status size, and a 300 DPI print-ready PDF
+              — all generated from the one design, so nothing drifts between formats.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">Can I use my own logo and brand colours?<span class="faq-icon"></span></button>
+          <div class="faq-a">
+            <p>Yes — set up your brand kit once with your logo, palette, and contact line, and every poster you generate
+              afterwards applies it automatically. You can also override it per-poster when you need to.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">Who owns the posters I create?<span class="faq-icon"></span></button>
+          <div class="faq-a">
+            <p>You do. Anything you generate on a paid plan is yours to use commercially, with no attribution required.
+              Free-plan exports carry a small Sanghi credit on the design.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">Does Sanghi support Hindi or regional languages?<span class="faq-icon"></span></button>
+          <div class="faq-a">
+            <p>English and Hindi are supported natively in both the brief and the poster copy itself, with more regional
+              languages rolling out gradually as we tune them properly rather than rushing them out.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">Is there a limit on how many posters I can generate?<span
+              class="faq-icon"></span></button>
+          <div class="faq-a">
+            <p>Starter is capped to keep things sustainable; Creator Pro and Studio are built for daily, ongoing use
+              with generous monthly allowances detailed on the pricing plan itself.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">Can my whole team share one brand kit?<span class="faq-icon"></span></button>
+          <div class="faq-a">
+            <p>On Studio, yes — any number of teammates can generate from the same shared brand kit and asset library,
+              so output stays consistent no matter who's posting that day.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">What happens if I cancel?<span class="faq-icon"></span></button>
+          <div class="faq-a">
+            <p>You keep every poster you've already exported. Your account drops to the Starter plan at the end of the
+              billing period — nothing is deleted, and you can upgrade again anytime.</p>
+          </div>
+        </div>
+      </div>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+    </section>
+
+    <!-- ============ PRICING ============ -->
+    <section class="pricing-section" id="pricing">
+      <div class="section-head">
+        <p class="eyebrow"><span class="reg-mark">+</span> Pricing</p>
+        <h2>Simple, transparent pricing.</h2>
+
+      </div>
+      <div class="pricing-grid">
+        {% if subscription_plans %}
+          {% for plan in subscription_plans %}
+          <div class="pricing-card{% if forloop.counter == 2 or plan.name == 'Creator Pro' %} featured tilt-card{% endif %}">
+            {% if forloop.counter == 2 or plan.name == 'Creator Pro' %}<span class="featured-tag">Most teams choose this</span>{% endif %}
+            <h3>{{ plan.name }}</h3>
+            <p class="price">
+              {% if plan.price == 0 or plan.price == 0.00 %}
+              <span class="price-amount">Free</span>
+              {% else %}
+              <span class="price-amount" data-monthly="{{ plan.price|floatformat:'0' }}" data-annual="{{ plan.price|floatformat:'0' }}">₹{{ plan.price|floatformat:"0" }}</span><span class="price-period">/mo</span>
+              {% endif %}
+            </p>
+            <p class="price-note">{% if plan.credits > 0 %}{{ plan.credits }} AI Credits included{% else %}Unlimited AI Generation{% endif %}</p>
+            <ul>
+              {% for feature in plan.features %}
+              <li>{{ feature }}</li>
+              {% empty %}
+              <li>{{ plan.credits }} posters allowance</li>
+              <li>Brand kit memory</li>
+              <li>Multi-format export</li>
+              {% endfor %}
+            </ul>
+            <a href="{% if user.is_authenticated %}{% url 'user_dashboard:trending' %}{% else %}{% url 'user_dashboard:login' %}{% endif %}" class="btn-{% if forloop.counter == 2 or plan.name == 'Creator Pro' %}primary{% else %}secondary{% endif %} magnetic">
+              {% if plan.price == 0 or plan.price == 0.00 %}Start free{% else %}Get started{% endif %}
+            </a>
+          </div>
+          {% endfor %}
+        {% else %}
+        <div class="pricing-card">
+          <h3>Starter</h3>
+          <p class="price"><span class="price-amount">Free</span></p>
+          <p class="price-note">For trying Sanghi on real work</p>
+          <ul>
+            <li>15 posters / month</li>
+            <li>Core layouts &amp; styles</li>
+            <li>Standard export, Sanghi credit</li>
+          </ul>
+          <a href="#generate" class="btn-secondary magnetic">Start free</a>
+        </div>
+        <div class="pricing-card featured tilt-card">
+          <span class="featured-tag">Most teams choose this</span>
+          <h3>Creator Pro</h3>
+          <p class="price"><span class="price-amount" data-monthly="499" data-annual="399">₹499</span><span
+              class="price-period">/mo</span></p>
+          <p class="price-note">For one person posting daily</p>
+          <ul>
+            <li>Unlimited posters</li>
+            <li>Full brand kit application</li>
+            <li>All export formats, HD &amp; print PDF</li>
+            <li>No Sanghi credit on exports</li>
+          </ul>
+          <a href="#generate" class="btn-primary magnetic">Start 7-day trial</a>
+        </div>
+        <div class="pricing-card">
+          <h3>Studio</h3>
+          <p class="price"><span class="price-amount" data-monthly="1499" data-annual="1199">₹1,499</span><span
+              class="price-period">/mo</span></p>
+          <p class="price-note">For agencies &amp; teams</p>
+          <ul>
+            <li>Everything in Creator Pro</li>
+            <li>5 shared team seats</li>
+            <li>Shared brand kits &amp; asset library</li>
+            <li>Priority support</li>
+          </ul>
+          <a href="#generate" class="btn-secondary magnetic">Talk to us</a>
+        </div>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- ============ MARQUEE STRIP ============ -->
+    <section class="marquee-strip">
+      <div class="marquee-track">
+        <div class="marquee-content">
+          <span class="marquee-item">Design at the speed of thought<span class="dot"></span></span>
+          <span class="marquee-item">Post every day<span class="dot"></span></span>
+          <span class="marquee-item">Brand-matched, every output<span class="dot"></span></span>
+          <span class="marquee-item">Ship it everywhere<span class="dot"></span></span>
+          <span class="marquee-item">Four steps. No design degree.<span class="dot"></span></span>
+        </div>
+        <div class="marquee-content">
+          <span class="marquee-item">Design at the speed of thought<span class="dot"></span></span>
+          <span class="marquee-item">Post every day<span class="dot"></span></span>
+          <span class="marquee-item">Brand-matched, every output<span class="dot"></span></span>
+          <span class="marquee-item">Ship it everywhere<span class="dot"></span></span>
+          <span class="marquee-item">Four steps. No design degree.<span class="dot"></span></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FINAL CTA ============ -->
+    <section class="footer-cta" id="generate">
+      <div class="floating-decor"></div>
+      <div class="floating-decor"></div>
+      <p class="eyebrow">Ready when you are</p>
+      <h2>Create your first poster.</h2>
+      <p class="cta-subtitle">Join thousands of teams who stopped waiting for designers and started shipping beautiful,
+        brand-perfect posters every single day.</p>
+      <a href="{% if user.is_authenticated %}{% url 'user_dashboard:trending' %}{% else %}{% url 'user_dashboard:login' %}{% endif %}" class="btn-primary large magnetic">Start creating — it's free</a>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="#top" class="brand">
+          <span class="brand-name">Sanghi Industries</span>
+        </a>
+        <hr class="brand-line">
+        <p>Posters for teams who don't<br>have a week to wait for one.</p>
+        <div class="social-row">
+          <a href="#" aria-label="Instagram">IG</a>
+          <a href="#" aria-label="LinkedIn">LI</a>
+          <a href="#" aria-label="X / Twitter">X</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Product</h5>
+        <hr class="col-line">
+        <a href="#how-it-works">How it works</a>
+        <a href="#capabilities">Capabilities</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQ</a>
+      </div>
+      <div class="footer-col">
+        <h5>Company</h5>
+        <hr class="col-line">
+        <a href="#about">About</a>
+        <a href="#">Careers</a>
+        <a href="#">Contact</a>
+      </div>
+      <div class="footer-col">
+        <h5>Resources</h5>
+        <hr class="col-line">
+        <a href="#">Brand guidelines</a>
+        <a href="#">Help centre</a>
+        <a href="#">Privacy policy</a>
+        <a href="#">Terms of service</a>
+      </div>
+      <div class="footer-col newsletter glass-card">
+        <div class="newsletter-header">
+          <span class="mail-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+          </span>
+          <h5>Stay posted</h5>
+        </div>
+        <hr class="card-line">
+        <p>Festival drops &amp; new presets,<br>a few times a year.</p>
+        <form class="newsletter-form" onsubmit="return false;">
+          <input type="email" placeholder="you@company.com" aria-label="Email address">
+          <div class="form-divider"></div>
+          <button type="submit" class="magnetic">Join</button>
+        </form>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="copyright">
+        <svg class="shield-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          <polyline points="9 12 11 14 15 10"></polyline>
+        </svg>
+        <p>© 2026 Sanghi Industries. All rights reserved.</p>
+      </div>
+      <p style="font-size: 20px;" class="brightcode-watermark">
+        Designed By <span class="brightcode-gradient">Brightcode</span>
+      </p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/@studio-freight/lenis@1.0.39/dist/lenis.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script src="{% static 'webportal/js/script.js' %}"></script>
+
+</body>
+</html>

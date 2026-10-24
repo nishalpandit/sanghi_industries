@@ -1,0 +1,180 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Brand Kits</h1>
+    <div class="breadcrumb"><a href="{% url 'dashboard' %}">Dashboard</a><i class="fas fa-chevron-right"></i><span>Brand Kits</span></div>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card primary">
+    <div class="stat-info">
+      <h3>Total Brand Kits</h3>
+      <div class="stat-value">{{ total_kits|default:"0" }}</div>
+    </div>
+    <div class="stat-icon primary"><i class="fas fa-swatchbook"></i></div>
+  </div>
+  
+  <div class="stat-card success">
+    <div class="stat-info">
+      <h3>Users with Kits</h3>
+      <div class="stat-value">{{ users_with_kits|default:"0" }}</div>
+    </div>
+    <div class="stat-icon success"><i class="fas fa-users"></i></div>
+  </div>
+
+  <div class="stat-card info">
+    <div class="stat-info">
+      <h3>New This Month</h3>
+      <div class="stat-value">{{ kits_this_month|default:"0" }}</div>
+    </div>
+    <div class="stat-icon info"><i class="fas fa-plus-circle"></i></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-swatchbook" style="color:var(--primary);margin-right:8px"></i>User Brand Kits</h3>
+  </div>
+  <div class="card-body">
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>User</th>
+            <th>Phone Number</th>
+            <th>Email</th>
+            <th>Total Brand Kits</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for profile in profiles %}
+          <tr>
+            <td>#{{ forloop.counter0|add:page_obj.start_index }}</td>
+            <td>
+              <div style="font-weight:600">{{ profile.user.get_full_name|default:profile.mobile_number }}</div>
+              <div style="font-size:12px;color:var(--text-light)">{{ profile.business_name }}</div>
+            </td>
+            <td>{{ profile.mobile_number|default:"-" }}</td>
+            <td>{{ profile.user.email|default:"-" }}</td>
+            <td>
+              <span class="badge badge-primary">{{ profile.kit_count }}</span>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary" onclick="viewBrandKits({{ profile.id }})" style="padding: 4px 10px; font-size: 0.8rem; background: var(--bg-body); border: 1px solid var(--primary); color: var(--primary);">View Kits</button>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" style="text-align:center;padding:2rem;color:var(--text-light)">No brand kits available</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% include 'dashboard/includes/pagination.html' %}
+  </div>
+</div>
+
+<!-- Modal for Viewing Brand Kits -->
+<div class="modal-overlay" id="viewKitsModal">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-header">
+      <h3>User Brand Kits</h3>
+      <button type="button" class="modal-close" onclick="Modal.close('viewKitsModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="brandKitsList" style="max-height:60vh; overflow-y:auto; padding: 20px;">
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="Modal.close('viewKitsModal')">Close</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script id="kits-data" type="application/json">
+{
+  {% for profile in profiles %}
+  "{{ profile.id }}": [
+    {% for kit in profile.brand_kits.all %}
+    {
+      "name": "{{ kit.name|escapejs }}",
+      "phone_number": "{{ kit.phone_number|escapejs }}",
+      "email": "{{ kit.email|escapejs }}",
+      "website": "{{ kit.website|escapejs }}",
+      "colors": [{% for color in kit.brand_colors %}"{{ color|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+      "logo_url": "{% if kit.logo %}{{ kit.logo.url }}{% endif %}"
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ]{% if not forloop.last %},{% endif %}
+  {% endfor %}
+}
+</script>
+<script>
+function viewBrandKits(profileId) {
+  const dataText = document.getElementById('kits-data').textContent;
+  let allData = {};
+  try {
+    allData = JSON.parse(dataText);
+  } catch(e) {
+    console.error("Error parsing kits data:", e);
+  }
+  const data = allData[profileId];
+  const container = document.getElementById('brandKitsList');
+  container.innerHTML = '';
+  
+  if (data && data.length > 0) {
+    data.forEach((kit, index) => {
+      let colorsHtml = '';
+      if (kit.colors && kit.colors.length > 0) {
+        colorsHtml = `<div style="display:flex;gap:4px;margin-top:8px">`;
+        kit.colors.forEach(color => {
+           colorsHtml += `<div style="width:24px;height:24px;border-radius:50%;background-color:${color};border:1px solid #ddd;" title="${color}"></div>`;
+        });
+        colorsHtml += `</div>`;
+      } else {
+        colorsHtml = `<div style="color:#999;font-size:12px;margin-top:8px">No colors defined</div>`;
+      }
+      
+      let logoHtml = kit.logo_url 
+         ? `<img src="${kit.logo_url}" alt="Logo" style="max-height:48px; border-radius:4px; border:1px solid #eee; padding:2px; background:#fff;">`
+         : `<div style="color:#999;font-size:12px;background:#f5f5f5;padding:12px;border-radius:4px;border:1px dashed #ddd;">No Logo</div>`;
+         
+      container.innerHTML += `
+        <div style="border:1px solid #eee; border-radius:8px; padding:16px; margin-bottom:16px; background:#fafafa;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+              <h4 style="margin:0 0 8px 0; color:var(--primary); font-size:1.1rem;">${kit.name}</h4>
+              <div style="font-size:0.85rem; color:#555; display:flex; flex-direction:column; gap:4px;">
+                ${kit.phone_number ? `<div><i class="fas fa-phone" style="width:16px; color:#888;"></i> ${kit.phone_number}</div>` : ''}
+                ${kit.email ? `<div><i class="fas fa-envelope" style="width:16px; color:#888;"></i> ${kit.email}</div>` : ''}
+                ${kit.website ? `<div><i class="fas fa-globe" style="width:16px; color:#888;"></i> <a href="${kit.website}" target="_blank" style="color:var(--primary);text-decoration:none;">${kit.website}</a></div>` : ''}
+              </div>
+              ${colorsHtml}
+            </div>
+            <div>
+              ${logoHtml}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  } else {
+    container.innerHTML = '<p style="text-align:center; color:#999; padding:20px;">No brand kits found.</p>';
+  }
+  
+  if (typeof Modal !== 'undefined') {
+    Modal.open('viewKitsModal');
+  } else {
+    document.getElementById('viewKitsModal').classList.add('active');
+  }
+}
+</script>
+{% endblock %}

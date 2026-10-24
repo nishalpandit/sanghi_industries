@@ -1,0 +1,55 @@
+{% extends "user_dashboard/base.html" %}
+{% load static %}
+
+{% block title %}Flex Designs{% endblock %}
+
+{% block active_flex_designs %}active{% endblock %}
+
+{% block header_title %}
+<h2>Flex Designs</h2>
+<p>Browse print-ready flex & banner designs</p>
+{% endblock %}
+
+{% block content %}
+<section class="page-section active">
+
+    <div class="section-header" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px;">
+        <h3 style="margin: 0;">
+            🎨 Flex Designs
+        </h3>
+    </div>
+
+    <div class="templates-grid">
+        {% for design in flex_designs %}
+        <div class="card template-card">
+            <div class="template-card-image">
+                <img src="{{ design.image_url }}" alt="{{ design.title }}" loading="lazy">
+                <span class="template-card-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
+                    {{ design.badge|default:"Flex" }}
+                </span>
+            </div>
+            <div class="template-card-body">
+                <h4>{{ design.title }}</h4>
+                <div class="template-card-footer">
+                    <span class="uses">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        {{ design.uses_count }} uses
+                    </span>
+                    <a href="{% url 'user_dashboard:ai_generation' %}?template_id={{ design.id }}&title={{ design.title|urlencode }}&ref_image={{ design.image_url|urlencode }}" class="btn btn-primary btn-sm">Use Template</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state" style="grid-column: 1 / -1;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <h4>No flex designs yet</h4>
+            <p>Check back soon — fresh designs are added regularly.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% include 'user_dashboard/includes/pagination.html' %}
+</section>
+{% endblock %}

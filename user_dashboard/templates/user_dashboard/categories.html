@@ -1,0 +1,283 @@
+{% extends "user_dashboard/base.html" %}
+{% load static %}
+
+{% block title %}{% if selected_category_obj %}{{ selected_category_obj.display_name }} Subtopics{% else %}Categories
+Studio{% endif %}{% endblock %}
+
+{% block active_categories %}active{% endblock %}
+
+{% block header_title %}
+{% if selected_category_obj %}
+<h2>{{ selected_category_obj.display_name }} Studio</h2>
+<p>Select a specialized subcategory below to explore matching AI poster designs</p>
+{% else %}
+<h2>Categories Studio</h2>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<section class="page-section active">
+    {% if selected_category_obj %}
+    <!-- ================= LEVEL 2: SUBCATEGORY VIEW ================= -->
+    <div
+        style="margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; background: var(--bg-card); padding: 14px 22px; border-radius: 16px; border: 1px solid var(--border-light); box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+        <a href="{% url 'user_dashboard:categories' %}" class="btn-back"
+            style="display: inline-flex; align-items: center; gap: 8px; background: rgba(124, 58, 237, 0.08); color: var(--primary); border: 1px solid rgba(124, 58, 237, 0.22); border-radius: var(--radius-full); padding: 8px 18px; font-size: 0.88rem; font-weight: 600; text-decoration: none; transition: all 0.2s; box-shadow: 0 2px 6px rgba(124, 58, 237, 0.05);">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.2" fill="none"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span>Back to Main Categories</span>
+        </a>
+
+        <span style="font-size: 0.9rem; color: var(--text-main); font-weight: 600;">
+            Browsing Topic: <strong style="color: {{ selected_category_obj.icon_color|default:'var(--primary)' }};">
+               {{ selected_category_obj.display_name }}</strong>
+        </span>
+    </div>
+
+    <div class="section-header"
+        style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px;">
+        <div>
+            <h3 style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.4rem;">
+                <span>{{ selected_category_obj.icon|default:'🗂️' }}</span>
+                <span>Subcategories in {{ selected_category_obj.display_name }}</span>
+            </h3>
+        </div>
+
+        <div class="header-search-bar" style="position: relative; flex: 1; max-width: 320px; min-width: 260px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round"
+                style="position:absolute;left:16px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--text-muted);">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input type="text" id="categorySearchInput" class="form-input" placeholder="Filter subcategories..."
+                style="padding: 12px 16px 12px 46px; border-radius: var(--radius-full); width: 100%; font-size: 0.95rem; border: 1px solid var(--border); box-shadow: var(--shadow-sm); transition: all var(--transition);"
+                autocomplete="off">
+            <button id="clearSearchBtn"
+                style="display: none; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1rem; line-height: 1;">✕</button>
+        </div>
+    </div>
+
+    <!-- Ultra-Premium Immersive Subcategory Cards Grid -->
+    <div class="categories-grid" id="categoriesGrid">
+        {% for sub in selected_category_obj.subcategories %}
+        <a href="{% url 'user_dashboard:ai_generation' %}?category={{ selected_category_obj.name|urlencode }}&title={{ sub.display_name|default:sub.name|urlencode }}&ref_image={{ sub.image_url|default:selected_category_obj.image_url|default:''|urlencode }}"
+            class="creative-studio-card interactive-cat-card"
+            data-cat-name="{{ sub.display_name|default:sub.name|lower }}">
+
+            <!-- 1. Full-Bleed Artwork Canvas -->
+            <div class="card-artwork-canvas">
+                {% if sub.image_url %}
+                <img src="{{ sub.image_url }}" alt="{{ sub.name }}" loading="lazy" class="artwork-image">
+                {% elif selected_category_obj.image_url %}
+                <img src="{{ selected_category_obj.image_url }}" alt="{{ sub.name }}" loading="lazy"
+                    class="artwork-image">
+                {% else %}
+                <div class="artwork-fallback"
+                    style="background: linear-gradient(135deg, {{ selected_category_obj.icon_bg|default:'#2E1065' }}, #0F172A);">
+                    <span class="giant-floating-icon">{{ selected_category_obj.icon|default:'🎨' }}</span>
+                </div>
+                {% endif %}
+                <div class="ambient-overlay"></div>
+                <div class="shimmer-sweep"></div>
+            </div>
+
+            <!-- 2. Top-Right Glass Designs Counter Pill -->
+            <div class="card-floating-badges">
+                <span class="glass-counter-badge">
+                    <span class="glowing-dot design-dot"></span>
+                    {{ sub.template_count }} Design{{ sub.template_count|pluralize }}
+                </span>
+            </div>
+
+            <!-- 3. Cinematic Bottom Banner Overlay -->
+            <div class="card-cinematic-footer">
+                <div class="footer-text-content">
+                    <h4 class="studio-card-title">{{ sub.display_name|default:sub.name }}</h4>
+                    <span class="studio-card-subtitle">Create in AI Studio</span>
+                </div>
+                <span class="btn btn-primary btn-sm use-template-btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; font-weight: 700; font-size: 0.88rem; border-radius: var(--radius-full); background: linear-gradient(135deg, var(--primary), var(--accent)); color: #ffffff; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.45); pointer-events: none; white-space: nowrap; flex-shrink: 0;">
+                    <span>Use Template</span>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </span>
+            </div>
+
+        </a>
+        {% empty %}
+        <div
+            style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px dashed var(--border-light);">
+            <div style="font-size: 3rem; margin-bottom: 12px;">📭</div>
+            <h4 style="font-size: 1.2rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">No subtopics
+                added yet</h4>
+            <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px;">There are no specific
+                subcategories listed under {{ selected_category_obj.display_name }}.</p>
+            <a href="{% url 'user_dashboard:ai_generation' %}?category={{ selected_category_obj.name|urlencode }}&ref_image={{ selected_category_obj.image_url|default:''|urlencode }}"
+                class="btn btn-primary"
+                style="border-radius: var(--radius-full); padding: 10px 24px; text-decoration: none;">Create {{ selected_category_obj.display_name }} in AI Studio</a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination for Subtopics -->
+    {% include 'user_dashboard/includes/pagination.html' %}
+
+    {% else %}
+    <!-- ================= LEVEL 1: MAIN CATEGORIES VIEW ================= -->
+    <div class="section-header"
+        style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px;">
+        <div>
+            <h3 style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1.4rem;">
+                <span>📁</span> Browse Categories
+            </h3>
+        </div>
+
+        <div class="header-search-bar" style="position: relative; flex: 1; max-width: 320px; min-width: 260px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round"
+                style="position:absolute;left:16px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--text-muted);">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input type="text" id="categorySearchInput" class="form-input" placeholder="Filter categories..."
+                style="padding: 12px 16px 12px 46px; border-radius: var(--radius-full); width: 100%; font-size: 0.95rem; border: 1px solid var(--border); box-shadow: var(--shadow-sm); transition: all var(--transition);"
+                autocomplete="off">
+            <button id="clearSearchBtn"
+                style="display: none; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1rem; line-height: 1;">✕</button>
+        </div>
+    </div>
+
+    <!-- Ultra-Premium Immersive Category Cards Grid -->
+    <div class="categories-grid" id="categoriesGrid">
+        {% for category in categories %}
+        <a href="{% url 'user_dashboard:categories' %}?parent={{ category.id }}"
+            class="creative-studio-card interactive-cat-card"
+            data-cat-name="{{ category.display_name|default:category.name|lower }}">
+
+            <!-- 1. Full-Bleed Artwork Canvas -->
+            <div class="card-artwork-canvas">
+                {% if category.image_url %}
+                <img src="{{ category.image_url }}" alt="{{ category.name }}" loading="lazy" class="artwork-image">
+                {% else %}
+                <div class="artwork-fallback"
+                    style="background: linear-gradient(135deg, {{ category.icon_bg|default:'#2E1065' }}, #0F172A);">
+                    <span class="giant-floating-icon">{{ category.icon|default:'✨' }}</span>
+                </div>
+                {% endif %}
+                <div class="ambient-overlay"></div>
+                <div class="shimmer-sweep"></div>
+            </div>
+
+            <!-- 2. Top-Right Glass Counter Pill -->
+            <div class="card-floating-badges">
+                <span class="glass-counter-badge">
+                    <span class="glowing-dot"></span>
+                    {{ category.subcategories_count }} Subcategor{{ category.subcategories_count|pluralize:"y,ies" }}
+                </span>
+            </div>
+
+            <!-- 3. Cinematic Bottom Banner Overlay -->
+            <div class="card-cinematic-footer">
+                <div class="footer-text-content">
+                    <h4 class="studio-card-title">{{ category.display_name|default:category.name }}</h4>
+                    <span class="studio-card-subtitle">Explore subtopics & designs</span>
+                </div>
+                <div class="studio-action-btn">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="7" y1="17" x2="17" y2="7"></line>
+                        <polyline points="7 7 17 7 17 17"></polyline>
+                    </svg>
+                </div>
+            </div>
+
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination for Main Categories -->
+    {% include 'user_dashboard/includes/pagination.html' %}
+
+    <!-- Empty State for Live Search -->
+    <div id="emptySearchResults"
+        style="display: none; text-align: center; padding: 60px 20px; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px dashed var(--border-light); margin-top: 20px;">
+        <div style="font-size: 3.5rem; margin-bottom: 16px;">🔍</div>
+        <h4 style="font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">No matching
+            categories found</h4>
+        <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 400px; margin: 0 auto 20px;">
+            We couldn't find any category matching "<strong id="searchQueryText"></strong>". Try another keyword or
+            reset your filter.
+        </p>
+        <button onclick="resetCategorySearch()" class="btn btn-primary btn-sm"
+            style="border-radius: var(--radius-full); padding: 8px 20px;">Show All Categories</button>
+    </div>
+    {% endif %}
+</section>
+
+<!-- Live Instant Search Script -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('categorySearchInput');
+        const clearBtn = document.getElementById('clearSearchBtn');
+        const cards = document.querySelectorAll('.interactive-cat-card');
+        const emptyState = document.getElementById('emptySearchResults');
+        const queryText = document.getElementById('searchQueryText');
+
+        if (!searchInput) return;
+
+        searchInput.addEventListener('input', function (e) {
+            const query = e.target.value.toLowerCase().trim();
+            let visibleCount = 0;
+
+            if (query.length > 0) {
+                clearBtn.style.display = 'block';
+            } else {
+                clearBtn.style.display = 'none';
+            }
+
+            cards.forEach(card => {
+                const catName = card.getAttribute('data-cat-name') || '';
+
+                if (catName.includes(query)) {
+                    card.style.display = 'flex';
+                    card.style.flexDirection = 'column';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0 && query.length > 0) {
+                emptyState.style.display = 'block';
+                queryText.textContent = e.target.value;
+            } else {
+                emptyState.style.display = 'none';
+            }
+        });
+
+        clearBtn.addEventListener('click', resetCategorySearch);
+    });
+
+    function resetCategorySearch() {
+        const searchInput = document.getElementById('categorySearchInput');
+        const clearBtn = document.getElementById('clearSearchBtn');
+        const emptyState = document.getElementById('emptySearchResults');
+        const cards = document.querySelectorAll('.interactive-cat-card');
+
+        if (searchInput) searchInput.value = '';
+        if (clearBtn) clearBtn.style.display = 'none';
+        if (emptyState) emptyState.style.display = 'none';
+
+        cards.forEach(card => {
+            card.style.display = 'flex';
+            card.style.flexDirection = 'column';
+        });
+    }
+</script>
+{% endblock %}

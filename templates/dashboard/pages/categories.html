@@ -1,0 +1,304 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Categories Management</h1>
+    <div class="breadcrumb"><a href="{% url 'dashboard' %}">Dashboard</a><i
+        class="fas fa-chevron-right"></i><span>Categories</span></div>
+  </div>
+  <div class="page-actions">
+  </div>
+</div>
+
+<!-- Category Stats -->
+<div class="template-stats-bar">
+  <div class="template-stat-item">
+    <div class="stat-icon primary"><i class="fas fa-tags"></i></div>
+    <div class="stat-text">
+      <h4>{{ total_categories|default:"0" }}</h4><span>Total Categories</span>
+    </div>
+  </div>
+  <div class="template-stat-item">
+    <div class="stat-icon success"><i class="fas fa-check-circle"></i></div>
+    <div class="stat-text">
+      <h4>{{ active_categories|default:"0" }}</h4><span>Active</span>
+    </div>
+  </div>
+  <div class="template-stat-item">
+    <div class="stat-icon warning"><i class="fas fa-ban"></i></div>
+    <div class="stat-text">
+      <h4>{{ inactive_categories|default:"0" }}</h4><span>Inactive</span>
+    </div>
+  </div>
+</div>
+
+<!-- Categories Grid -->
+<div id="parentCategoriesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px; margin-bottom: 24px;">
+  {% for category in parent_categories %}
+  <div class="category-card" style="background: #fff; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; cursor: pointer; transition: all 0.2s ease; position: relative; {% if not category.is_active %}opacity: 0.5;{% endif %}" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.08)'; this.style.borderColor='var(--primary-color)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.02)'; this.style.borderColor='var(--border-color)';">
+    <!-- Active/Inactive Toggle -->
+    <form method="POST" action="{% url 'templates' %}" style="position: absolute; top: 8px; right: 8px; z-index: 2;" onclick="event.stopPropagation();">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="toggle_active">
+      <input type="hidden" name="category_id" value="{{ category.id }}">
+      <button type="submit" class="btn" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 20px; border: none; {% if category.is_active %}background: #dcfce7; color: #16a34a;{% else %}background: #fee2e2; color: #dc2626;{% endif %}" title="{% if category.is_active %}Click to Deactivate{% else %}Click to Activate{% endif %}">
+        <i class="fas {% if category.is_active %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
+        {% if category.is_active %}Active{% else %}Inactive{% endif %}
+      </button>
+    </form>
+    <div onclick="TemplateManager.showCategory('{{ category.name|escapejs }}')" style="height: 140px; background: #f8fafc; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 16px;">
+      {% if category.image %}
+      <img src="{{ category.image.url }}" style="width: 100%; height: 100%; object-fit: contain;">
+      {% else %}
+      <i class="fas fa-folder-open" style="font-size: 3rem; color: #cbd5e1;"></i>
+      {% endif %}
+    </div>
+    <div onclick="TemplateManager.showCategory('{{ category.name|escapejs }}')" style="padding: 16px; border-top: 1px solid var(--border-color);">
+      <h4 style="margin: 0; font-size: 1.1rem; color: var(--text-dark);">{{ category.name }}</h4>
+      <p style="margin: 6px 0 0; font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <span><i class="fas fa-folder-open" style="color: #64748b; margin-right: 4px;"></i> {{ category.subcategory_count|default:"0" }} Subcategories</span>
+        <span><i class="fas fa-layer-group" style="color: #64748b; margin-right: 4px;"></i> {{ category.template_count|default:"0" }} Templates</span>
+      </p>
+    </div>
+  </div>
+  {% empty %}
+  <div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--text-muted);">
+    <i class="fas fa-tags" style="font-size: 3rem; margin-bottom: 16px; opacity: 0.5;"></i>
+    <h3>No categories found</h3>
+    <p>Add a new category to get started.</p>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% include 'dashboard/includes/pagination.html' with page_obj=parent_categories %}
+
+<!-- Category Details Container (Hidden by Default) -->
+<div id="categoryDetailsContainer" style="display: none; margin-bottom: 24px; padding: 20px; background: #fff; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+  <button onclick="TemplateManager.showAllCategories()" class="btn btn-secondary" style="margin-bottom: 16px; background: #f1f5f9; color: #334155; border: none;"><i class="fas fa-arrow-left"></i> Back to Categories</button>
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <!-- Subcategories -->
+    <div>
+      <h4 style="margin-bottom: 12px; font-size: 1.2rem; color: var(--text-dark);">Subcategories</h4>
+      <div id="subcategoriesList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px;">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Templates Container -->
+<div id="templatesContainer" class="template-grid" style="display: none;">
+  {% for template in templates %}
+  <div class="template-card" data-category="{{ template.category.name|default:'' }}" data-status="{{ template.status }}">
+    <div class="template-preview">
+      {% if template.file %}
+      <img src="{{ template.file.url }}" alt="{{ template.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+      {% else %}
+      <div style="width: 100%; height: 100%; background: #eee; display: flex; align-items: center; justify-content: center; color: #999;">No Image</div>
+      {% endif %}
+      <span class="template-status-badge badge {{ template.status }}" style="background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">{{ template.status|title }}</span>
+    </div>
+    <div class="template-card-body">
+      <div class="template-category">
+        <i class="fas fa-folder"></i> {{ template.category.name|default:"Uncategorized" }}
+      </div>
+      <h4>{{ template.name }}</h4>
+      <div class="template-card-footer">
+        <div class="template-stat">
+          <i class="fas fa-download"></i> {{ template.usage_count }}
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-sm" style="padding: 4px 10px; font-size: 0.8rem; background: var(--bg-body); border: 1px solid var(--border-color);" onclick="TemplateManager.previewTemplate('{{ template.id }}')" title="Preview"><i class="fas fa-eye"></i></button>
+          <button class="btn btn-sm" style="padding: 4px 10px; font-size: 0.8rem; background: var(--bg-body); border: 1px solid var(--border-color);" onclick="TemplateManager.editTemplate('{{ template.id }}')" title="Edit"><i class="fas fa-edit"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--text-muted);">
+    <i class="fas fa-image" style="font-size: 3rem; margin-bottom: 16px; opacity: 0.5;"></i>
+    <h3>No templates found</h3>
+    <p>Upload a new template to get started.</p>
+  </div>
+  {% endfor %}
+</div>
+</div>
+
+<!-- Template Preview Modal -->
+<div class="modal-overlay" id="templatePreviewModal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <h3>Template Preview</h3>
+      <button class="modal-close" onclick="Modal.close('templatePreviewModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="templatePreviewContent"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="Modal.close('templatePreviewModal')">Close</button>
+      <button class="btn btn-primary"><i class="fas fa-edit"></i> Edit Template</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Template Modal -->
+<div class="modal-overlay" id="addTemplateModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="templateModalTitle">Add New Template</h3>
+      <button type="button" class="modal-close" onclick="Modal.close('addTemplateModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <form method="POST" action="{% url 'templates' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create" id="templateAction">
+      <input type="hidden" name="template_id" id="templateId">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Template Name <span style="color:var(--danger)">*</span></label>
+          <input type="text" name="name" id="newTemplateName" class="form-control" placeholder="Enter template name" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select name="category" id="newTemplateCategory" class="form-select">
+            <option value="">Select category</option>
+            {% for category in categories %}
+            <option value="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea name="description" id="newTemplateDescription" class="form-control" rows="3" placeholder="Template description..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select name="status" id="newTemplateStatus" class="form-select">
+            <option value="published">Published</option>
+            <option value="draft">Draft</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Upload Design File</label>
+          <input type="file" name="file" id="newTemplateFile" class="form-control" accept=".png, .jpg, .jpeg, .svg">
+          <small class="form-text text-muted">PNG, JPG, SVG up to 10MB</small>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:space-between">
+        <button type="button" class="btn btn-secondary" onclick="Modal.close('addTemplateModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Template</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+{% endblock %}
+{% block extra_js %}
+<script id="templates-data" type="application/json">
+{
+  {% for t in templates %}
+  "{{ t.id }}": {
+    "name": "{{ t.name|escapejs }}",
+    "category": "{{ t.category.id|default:'' }}",
+    "description": "{{ t.description|escapejs }}",
+    "status": "{{ t.status|escapejs }}",
+    "file_url": "{% if t.file %}{{ t.file.url }}{% endif %}"
+  }{% if not forloop.last %},{% endif %}
+  {% endfor %}
+}
+</script>
+<script id="categories-json-data" type="application/json">
+  {{ categories_json|safe }}
+</script>
+<script>
+const TemplateManager = {
+  setView(view) {
+    const container = document.getElementById('templatesContainer');
+    container.className = view === 'list' ? 'template-list-view' : 'template-grid';
+    document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.view-toggle button[data-view="${view}"]`).classList.add('active');
+  },
+  showAllCategories() {
+    document.getElementById('parentCategoriesGrid').style.display = 'grid';
+    document.getElementById('categoryDetailsContainer').style.display = 'none';
+    document.getElementById('templatesContainer').style.display = 'none';
+  },
+  showCategory(categoryName) {
+    document.getElementById('parentCategoriesGrid').style.display = 'none';
+    
+    const categoryDetailsContainer = document.getElementById('categoryDetailsContainer');
+    const categoriesData = JSON.parse(document.getElementById('categories-json-data').textContent);
+    
+    if (categoriesData[categoryName]) {
+      const data = categoriesData[categoryName];
+      
+      // Setup Subcategories
+      const subContainer = document.getElementById('subcategoriesList');
+      if (data.subcategories && data.subcategories.length > 0) {
+        subContainer.innerHTML = data.subcategories.map(sub => `
+          <div class="category-card" onclick="TemplateManager.setFilter('${sub.name.replace(/'/g, "\\'")}')" style="background: #fff; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.08)'; this.style.borderColor='var(--primary-color)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.02)'; this.style.borderColor='var(--border-color)';">
+            <div style="height: 140px; background: #f8fafc; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 16px;">
+              ${sub.image_url ? `<img src="${sub.image_url}" style="width: 100%; height: 100%; object-fit: contain;">` : `<i class="fas fa-folder-open" style="font-size: 3rem; color: #cbd5e1;"></i>`}
+            </div>
+            <div style="padding: 16px; border-top: 1px solid var(--border-color);">
+              <h4 style="margin: 0; font-size: 1.1rem; color: var(--text-dark);">${sub.name}</h4>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        subContainer.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem;">No subcategories found.</p>`;
+      }
+      
+      categoryDetailsContainer.style.display = 'block';
+      // Hide templates until a subcategory is clicked
+      document.getElementById('templatesContainer').style.display = 'none';
+    }
+  },
+  setFilter(subCategoryName) {
+    // When clicking a subcategory, show the templates grid and filter
+    document.getElementById('templatesContainer').style.display = 'grid';
+    document.querySelectorAll('.template-card').forEach(card => {
+      if (card.dataset.category === subCategoryName) {
+        card.style.display = 'block';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  },
+  addTemplate() {
+    document.getElementById('templateModalTitle').innerText = 'Add New Template';
+    document.getElementById('templateAction').value = 'create';
+    document.getElementById('templateId').value = '';
+    document.getElementById('newTemplateName').value = '';
+    document.getElementById('newTemplateCategory').value = '';
+    document.getElementById('newTemplateDescription').value = '';
+    document.getElementById('newTemplateStatus').value = 'published';
+    document.getElementById('newTemplateFile').required = true;
+    Modal.open('addTemplateModal');
+  },
+  editTemplate(id) {
+    const data = JSON.parse(document.getElementById('templates-data').textContent)[id];
+    if (data) {
+      document.getElementById('templateModalTitle').innerText = 'Edit Template';
+      document.getElementById('templateAction').value = 'edit';
+      document.getElementById('templateId').value = id;
+      document.getElementById('newTemplateName').value = data.name;
+      document.getElementById('newTemplateCategory').value = data.category;
+      document.getElementById('newTemplateDescription').value = data.description;
+      document.getElementById('newTemplateStatus').value = data.status;
+      document.getElementById('newTemplateFile').required = false;
+      Modal.open('addTemplateModal');
+    }
+  },
+  previewTemplate(id) {
+    const data = JSON.parse(document.getElementById('templates-data').textContent)[id];
+    if (data && data.file_url) {
+      const content = document.getElementById('templatePreviewContent');
+      content.innerHTML = `<img src="${data.file_url}" style="width:100%; max-height:60vh; object-fit:contain; background:#f5f5f5; border-radius:8px;">`;
+      Modal.open('templatePreviewModal');
+    } else {
+      Toast.show('No image available to preview.', 'error');
+    }
+  }
+};
+</script>
+{% endblock %}

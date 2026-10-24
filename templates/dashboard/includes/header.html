@@ -1,0 +1,112 @@
+<header class="header" role="banner">
+  <div class="header-left">
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar">
+      <i class="fas fa-bars"></i>
+    </button>
+    <!-- <div class="header-search">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search anything..." aria-label="Search">
+          </div> -->
+  </div>
+  <div class="header-right">
+    <div class="dropdown">
+      <!-- <button class="header-btn" data-dropdown aria-label="Notifications">
+              <i class="fas fa-bell"></i>
+              <span class="badge-dot"></span>
+            </button> -->
+      <!-- <div class="notification-panel">
+              <div
+                style="padding:16px 20px;border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center">
+                <h4 style="font-size:0.95rem">Notifications</h4>
+                <span class="badge badge-primary">5 new</span>
+              </div>
+              <div style="max-height:320px;overflow-y:auto">
+                <div class="dropdown-item" style="padding:12px 20px;border-bottom:1px solid var(--border-color)">
+                  <div class="activity-icon"
+                    style="background:var(--success-light);color:var(--success);width:32px;height:32px;font-size:0.7rem">
+                    <i class="fas fa-user-plus"></i>
+                  </div>
+                  <div>
+                    <div style="font-size:0.8rem;font-weight:500">142 new users registered today</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted)">2 minutes ago &bull; Mumbai, Delhi</div>
+                  </div>
+                </div>
+                <div class="dropdown-item" style="padding:12px 20px;border-bottom:1px solid var(--border-color)">
+                  <div class="activity-icon"
+                    style="background:var(--primary-50);color:var(--primary);width:32px;height:32px;font-size:0.7rem"><i
+                      class="fas fa-palette"></i></div>
+                  <div>
+                    <div style="font-size:0.8rem;font-weight:500">Ganesh Chaturthi templates uploaded</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted)">15 minutes ago</div>
+                  </div>
+                </div>
+                <div class="dropdown-item" style="padding:12px 20px;border-bottom:1px solid var(--border-color)">
+                  <div class="activity-icon"
+                    style="background:var(--warning-light);color:var(--warning);width:32px;height:32px;font-size:0.7rem">
+                    <i class="fas fa-exclamation-triangle"></i>
+                  </div>
+                  <div>
+                    <div style="font-size:0.8rem;font-weight:500">Server CPU usage above 80%</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted)">1 hour ago</div>
+                  </div>
+                </div>
+                <div class="dropdown-item" style="padding:12px 20px;border-bottom:1px solid var(--border-color)">
+                  <div class="activity-icon"
+                    style="background:var(--info-light);color:var(--info);width:32px;height:32px;font-size:0.7rem"><i
+                      class="fas fa-indian-rupee-sign"></i></div>
+                  <div>
+                    <div style="font-size:0.8rem;font-weight:500">Revenue milestone: ₹2 Cr reached!</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted)">3 hours ago</div>
+                  </div>
+                </div>
+                <div class="dropdown-item" style="padding:12px 20px">
+                  <div class="activity-icon"
+                    style="background:var(--danger-light);color:var(--danger);width:32px;height:32px;font-size:0.7rem">
+                    <i class="fas fa-bug"></i>
+                  </div>
+                  <div>
+                    <div style="font-size:0.8rem;font-weight:500">3 failed UPI payment attempts</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted)">5 hours ago</div>
+                  </div>
+                </div>
+              </div>
+              <div style="padding:12px 20px;border-top:1px solid var(--border-color);text-align:center">
+                <a href="#notifications" data-nav="notifications"
+                  style="font-size:0.8rem;color:var(--primary);font-weight:500">View All Notifications</a>
+              </div>
+            </div> -->
+    </div>
+    <div class="header-profile">
+      <div class="header-profile-avatar">
+        {% if request.user.first_name %}
+          {{ request.user.first_name|first|upper }}
+        {% else %}
+          {{ request.user.username|first|upper }}
+        {% endif %}
+      </div>
+      <div class="header-profile-info">
+        <h6>
+          {% if request.user.first_name %}
+            {{ request.user.first_name|upper }} {{ request.user.last_name|upper }}
+          {% else %}
+            {{ request.user.username|upper }}
+          {% endif %}
+        </h6>
+        <span>
+          {% if request.user.is_superuser %}
+            Super Admin
+          {% elif request.user.is_staff %}
+            Admin
+          {% else %}
+            User
+          {% endif %}
+        </span>
+      </div>
+    </div>
+    <div style="margin-left: 12px; border-left: 1px solid var(--border-color); padding-left: 20px; display: flex; align-items: center;">
+      <a href="{% url 'logout' %}" class="btn btn-logout">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </a>
+    </div>
+  </div>
+</header>

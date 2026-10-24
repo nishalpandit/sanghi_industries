@@ -1,0 +1,177 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block content %}
+<div class="page-header">
+          <div>
+            <h1>Analytics & Reporting</h1>
+            <div class="breadcrumb"><a href="{% url 'dashboard' %}">Dashboard</a><i class="fas fa-chevron-right"></i><span>Analytics</span></div>
+          </div>
+          <div class="page-actions">
+            <div style="display:flex;align-items:center;gap:8px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--border-radius);padding:4px 12px">
+              <i class="fas fa-calendar" style="color:var(--text-muted);font-size:0.8rem"></i>
+              <input type="date" class="form-control" style="border:none;padding:4px 0;font-size:0.8rem;width:110px" value="2025-01-01">
+              <span style="color:var(--text-muted)">to</span>
+              <input type="date" class="form-control" style="border:none;padding:4px 0;font-size:0.8rem;width:110px" value="2025-12-31">
+            </div>
+            <button class="btn btn-secondary" onclick="ExportManager.print()"><i class="fas fa-print"></i> Print</button>
+            <button class="btn btn-primary"><i class="fas fa-download"></i> Export Report</button>
+          </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="stats-grid">
+          <div class="stat-card primary">
+            <div class="stat-info">
+              <h3>Daily Active Users</h3>
+              <div class="stat-value">{{ daily_active_users|default:"0" }}</div>
+              <div class="stat-change positive"><i class="fas fa-arrow-up"></i> {{ daily_active_users_change|default:"0" }}%</div>
+            </div>
+            <div class="stat-icon primary"><i class="fas fa-user-clock"></i></div>
+          </div>
+          <div class="stat-card success">
+            <div class="stat-info">
+              <h3>Monthly Active Users</h3>
+              <div class="stat-value">{{ monthly_active_users|default:"0" }}</div>
+              <div class="stat-change positive"><i class="fas fa-arrow-up"></i> {{ monthly_active_users_change|default:"0" }}%</div>
+            </div>
+            <div class="stat-icon success"><i class="fas fa-users"></i></div>
+          </div>
+          <div class="stat-card warning">
+            <div class="stat-info">
+              <h3>Avg Session Duration</h3>
+              <div class="stat-value">{{ avg_session_duration|default:"0m" }}</div>
+              <div class="stat-change positive"><i class="fas fa-arrow-up"></i> {{ avg_session_duration_change|default:"0" }}%</div>
+            </div>
+            <div class="stat-icon warning"><i class="fas fa-clock"></i></div>
+          </div>
+          <div class="stat-card secondary">
+            <div class="stat-info">
+              <h3>Conversion Rate</h3>
+              <div class="stat-value">{{ conversion_rate|default:"0" }}%</div>
+              <div class="stat-change positive"><i class="fas fa-arrow-up"></i> {{ conversion_rate_change|default:"0" }}%</div>
+            </div>
+            <div class="stat-icon secondary"><i class="fas fa-indian-rupee-sign"></i></div>
+          </div>
+        </div>
+
+        <!-- DAU Chart -->
+        <div class="card mb-24" style="margin-bottom:24px">
+          <div class="card-header">
+            <h3><i class="fas fa-chart-area" style="color:var(--primary);margin-right:8px"></i>Daily Active Users (Last 30 Days)</h3>
+          </div>
+          <div class="card-body">
+            <div class="chart-container" style="height:300px">
+              <canvas id="dauChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-image" style="color:var(--info);margin-right:8px"></i>Poster Creation Stats</h3>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="height:280px">
+                <canvas id="posterChart"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-clock" style="color:var(--warning);margin-right:8px"></i>Avg Session by Day</h3>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="height:280px">
+                <canvas id="sessionChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature Usage & Funnel -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-radar" style="color:var(--secondary);margin-right:8px"></i>Feature Usage</h3>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="height:300px">
+                <canvas id="featureChart"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-filter" style="color:var(--success);margin-right:8px"></i>Conversion Funnel</h3>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="height:300px">
+                <canvas id="funnelChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Pages / Engagement -->
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-fire" style="color:var(--danger);margin-right:8px"></i>User Engagement Metrics</h3>
+          </div>
+          <div class="card-body">
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th>Today</th>
+                    <th>Yesterday</th>
+                    <th>This Week</th>
+                    <th>This Month</th>
+                    <th>Trend</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{% static 'dashboard/js/charts.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Parsing JSON context variables passed from the view
+    const dauLabels = {{ chart_dau_labels|safe|default:"[]" }};
+    const dauData = {{ chart_dau_data|safe|default:"[]" }};
+    
+    const posterLabels = {{ chart_poster_labels|safe|default:"[]" }};
+    const posterCreated = {{ chart_poster_created|safe|default:"[]" }};
+    const posterExported = {{ chart_poster_exported|safe|default:"[]" }};
+    
+    const sessionData = {{ chart_session_data|safe|default:"[]" }};
+    const sessionLabels = {{ chart_poster_labels|safe|default:"[]" }}; // using same 7 days labels
+    
+    const featureLabels = {{ chart_feature_labels|safe|default:"[]" }};
+    const featureThis = {{ chart_feature_this|safe|default:"[]" }};
+    const featureLast = {{ chart_feature_last|safe|default:"[]" }};
+    
+    const funnelLabels = {{ chart_funnel_labels|safe|default:"[]" }};
+    const funnelData = {{ chart_funnel_data|safe|default:"[]" }};
+
+    // Initialize the charts with dynamic data
+    createDAUChart('dauChart', dauLabels, dauData);
+    createPosterCreationChart('posterChart', posterLabels, posterCreated, posterExported);
+    createSessionChart('sessionChart', sessionLabels, sessionData);
+    createFeatureUsageChart('featureChart', featureLabels, featureThis, featureLast);
+    createConversionFunnel('funnelChart', funnelLabels, funnelData);
+  });
+</script>
+{% endblock %}

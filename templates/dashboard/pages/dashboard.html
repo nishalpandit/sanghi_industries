@@ -1,0 +1,79 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block content %}
+<div class="page-header" style="margin-bottom: 32px;">
+  <div>
+    <h1 style="color: #0b1c3e; font-weight: 800; font-size: 1.8rem; margin-bottom: 2px;">Dashboard Overview</h1>
+    <div class="breadcrumb" style="color: #94a3b8; font-size: 0.9rem;"><span>Dashboard</span></div>
+  </div>
+  <div class="page-actions" style="gap: 16px;">
+    <button class="btn" style="background: #ffffff; border: 1px solid #e2e8f0; color: #475569; padding: 10px 20px; border-radius: 8px; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.02);" onclick="window.print()"><i class="fas fa-print" style="margin-right: 6px;"></i> Print</button>
+    <button class="btn" style="background: #5c55ff; color: #ffffff; padding: 10px 20px; border-radius: 8px; font-weight: 600; box-shadow: 0 4px 12px rgba(92,85,255,0.25);" onclick="location.reload()"><i class="fas fa-sync-alt" style="margin-right: 6px;"></i> Refresh</button>
+  </div>
+</div>
+<div class="stats-grid">
+  <div class="stat-card"><div class="stat-info"><h3>Total Users</h3><div class="stat-value">{{ total_users|default:"0" }}</div><div class="stat-change positive"><i class="fas fa-arrow-up"></i> {{ total_users_change|default:"0" }}% from last month</div></div><div class="stat-icon primary"><i class="fas fa-users"></i></div></div>
+  <div class="stat-card"><div class="stat-info"><h3>Total Revenue</h3><div class="stat-value">₹{{ total_revenue|default:"0" }}</div><div class="stat-change positive"><i class="fas fa-arrow-up"></i> {{ total_revenue_change|default:"0" }}% from last month</div></div><div class="stat-icon success"><i class="fas fa-indian-rupee-sign"></i></div></div>
+  <div class="stat-card"><div class="stat-info"><h3>Posters Created</h3><div class="stat-value">{{ total_posters|default:"0" }}</div><div class="stat-change positive"><i class="fas fa-arrow-up"></i> {{ total_posters_change|default:"0" }}% from last month</div></div><div class="stat-icon warning"><i class="fas fa-image"></i></div></div>
+  <div class="stat-card"><div class="stat-info"><h3>Active Subscriptions</h3><div class="stat-value">{{ active_subscriptions|default:"0" }}</div><div class="stat-change positive"><i class="fas fa-arrow-up"></i> {{ active_subscriptions_change|default:"0" }}% from last month</div></div><div class="stat-icon info"><i class="fas fa-crown"></i></div></div>
+</div>
+
+<div class="quick-actions">
+  <a href="{% url 'users' %}" data-nav="users" class="quick-action-btn"><i class="fas fa-user-plus" style="color: #5c55ff;"></i><span>Add User</span></a>
+  <a href="{% url 'templates' %}" data-nav="templates" class="quick-action-btn"><i class="fas fa-plus-circle" style="color: #5c55ff;"></i><span>New Template</span></a>
+  <a href="{% url 'notifications' %}" data-nav="notifications" class="quick-action-btn"><i class="fas fa-paper-plane" style="color: #5c55ff;"></i><span>Send Notification</span></a>
+  <a href="{% url 'subscriptions' %}" data-nav="subscriptions" class="quick-action-btn"><i class="fas fa-tags" style="color: #5c55ff;"></i><span>Manage Plans</span></a>
+</div>
+
+<div style="margin-bottom: 24px;">
+  <div class="card" style="border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+    <div class="card-header" style="border-bottom: none; padding-top: 24px;">
+      <h3 style="font-weight: 700; color: #121828; display: flex; align-items: center;"><i class="fas fa-chart-line" style="color:var(--primary);margin-right:12px; font-size: 1.2rem;"></i>User Growth</h3>
+      <div style="display: flex; gap: 16px; font-size: 0.8rem; color: #475569;">
+        <span style="display: flex; align-items: center; gap: 6px;"><div style="width: 8px; height: 8px; border-radius: 50%; background: var(--primary);"></div> New Users</span>
+        <span style="display: flex; align-items: center; gap: 6px;"><div style="width: 8px; height: 8px; border-radius: 50%; background: var(--success);"></div> Active Users</span>
+      </div>
+    </div>
+    <div class="card-body"><div class="chart-container" style="height:320px"><canvas id="userGrowthChart"></canvas></div></div>
+  </div>
+</div>
+
+<div style="margin-bottom: 24px;">
+  <div class="card" style="border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+    <div class="card-header" style="border-bottom: none; padding-top: 24px;">
+      <h3 style="font-weight: 700; color: #121828; display: flex; align-items: center;"><i class="fas fa-indian-rupee-sign" style="color:var(--success);margin-right:12px; font-size: 1.2rem;"></i>Revenue Overview</h3>
+      <a href="{% url 'subscriptions' %}" data-nav="subscriptions" class="btn btn-sm btn-outline" style="border-radius: 20px; font-weight: 600; padding: 6px 16px;">View All</a>
+    </div>
+    <div class="card-body">
+      <div class="chart-container" style="height:320px"><canvas id="revenueChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{% static 'dashboard/js/charts.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+      const chartData = JSON.parse('{{ chart_data_json|escapejs }}');
+      
+      // User Growth Chart
+      const userChart = createUserGrowthChart('userGrowthChart');
+      if (userChart) {
+        userChart.data.labels = chartData.labels;
+        userChart.data.datasets[0].data = chartData.new_users;
+        userChart.data.datasets[1].data = chartData.active_users;
+        userChart.update();
+      }
+    // Revenue Chart
+    const revenueChart = createRevenueChart('revenueChart');
+    if (revenueChart) {
+      revenueChart.data.labels = chartData.labels;
+      revenueChart.data.datasets[0].data = chartData.revenue;
+      revenueChart.update();
+    }
+  });
+</script>
+{% endblock %}

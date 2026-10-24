@@ -1,0 +1,443 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block content %}
+<style>
+.premium-plan-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+}
+.premium-plan-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+  border-color: rgba(var(--primary-rgb), 0.1);
+}
+.premium-plan-card.inactive {
+  opacity: 0.75;
+  filter: grayscale(0.8);
+}
+.plan-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.plan-badge.inactive {
+  background: #ffebee;
+  color: #c62828;
+}
+.plan-name {
+  font-size: 18px;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 6px;
+  margin-top: 0;
+  letter-spacing: -0.5px;
+}
+.plan-price {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--primary);
+  margin: 12px 0 16px 0;
+  display: flex;
+  align-items: baseline;
+  letter-spacing: -1px;
+}
+.plan-price span {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-left: 4px;
+  letter-spacing: 0;
+}
+.plan-divider {
+  height: 1px;
+  background: #f3f4f6;
+  margin: 16px 0;
+  width: 100%;
+}
+.plan-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px 0;
+  flex-grow: 1;
+}
+.plan-features li {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  color: #374151;
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 500;
+}
+.plan-features li i {
+  color: var(--primary);
+  margin-top: 2px;
+  margin-right: 10px;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.plan-stats {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.plan-stat {
+  display: flex;
+  flex-direction: column;
+  background: #f9fafb;
+  padding: 8px 12px;
+  border-radius: 8px;
+  flex: 1;
+  border: 1px solid #f3f4f6;
+}
+.plan-stat-value {
+  font-weight: 800;
+  color: #111827;
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+.plan-stat-label {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+</style>
+<div class="page-header">
+          <div>
+            <h1>Subscriptions & Revenue</h1>
+            <div class="breadcrumb"><a href="{% url 'dashboard' %}">Dashboard</a><i class="fas fa-chevron-right"></i><span>Subscriptions</span></div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary" onclick="SubscriptionManager.exportTransactions('csv')"><i class="fas fa-download"></i> Export</button>
+            <button class="btn btn-primary" onclick="openPlanModal()"><i class="fas fa-plus"></i> New Plan</button>
+          </div>
+        </div>
+
+        <!-- Revenue Stats -->
+        <div class="stats-grid">
+          <div class="stat-card success">
+            <div class="stat-info">
+              <h3>Total Revenue</h3>
+              <div class="stat-value">₹{{ total_revenue|default:"0" }}</div>
+              <div class="stat-change positive"><i class="fas fa-arrow-up"></i> {{ total_revenue_change|default:"0" }}%</div>
+            </div>
+            <div class="stat-icon success"><i class="fas fa-indian-rupee-sign"></i></div>
+          </div>
+          <div class="stat-card primary">
+            <div class="stat-info">
+              <h3>MRR</h3>
+              <div class="stat-value">₹{{ mrr|default:"0" }}</div>
+              <div class="stat-change positive"><i class="fas fa-arrow-up"></i> {{ mrr_change|default:"0" }}%</div>
+            </div>
+            <div class="stat-icon primary"><i class="fas fa-chart-line"></i></div>
+          </div>
+          <div class="stat-card info">
+            <div class="stat-info">
+              <h3>Active Subscriptions</h3>
+              <div class="stat-value">{{ active_subscriptions|default:"0" }}</div>
+              <div class="stat-change positive"><i class="fas fa-arrow-up"></i> {{ active_subscriptions_change|default:"0" }}%</div>
+            </div>
+            <div class="stat-icon info"><i class="fas fa-crown"></i></div>
+          </div>
+          <div class="stat-card danger">
+            <div class="stat-info">
+              <h3>Churn Rate</h3>
+              <div class="stat-value">{{ churn_rate|default:"0" }}%</div>
+              <div class="stat-change positive"><i class="fas fa-arrow-down"></i> {{ churn_rate_change|default:"0" }}%</div>
+            </div>
+            <div class="stat-icon danger"><i class="fas fa-user-minus"></i></div>
+          </div>
+        </div>
+
+        <!-- Revenue Chart & Distribution -->
+        <div class="dashboard-grid-equal" style="display:grid;grid-template-columns:2fr 1fr;gap:24px;margin-bottom:24px">
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-chart-area" style="color:var(--success);margin-right:8px"></i>Revenue Trend</h3>
+              <select class="form-select" style="width:auto" id="revenuePeriod" onchange="updateRevenueTrend(this.value)">
+                <option value="monthly">Monthly</option>
+                <option value="weekly">Weekly</option>
+                <option value="daily">Daily</option>
+              </select>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="height:300px">
+                <canvas id="revenueTrendChart"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-chart-pie" style="color:var(--primary);margin-right:8px"></i>Plan Distribution</h3>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="height:250px">
+                <canvas id="subscriptionChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Plans Grid -->
+        <div class="card mb-24" style="margin-bottom:24px">
+          <div class="card-header">
+            <h3><i class="fas fa-tags" style="color:var(--secondary);margin-right:8px"></i>Subscription Plans</h3>
+          </div>
+          <div class="card-body">
+            <div id="plansGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px">
+              {% for plan in plans %}
+              <div class="premium-plan-card {% if not plan.is_active %}inactive{% endif %}">
+                {% if plan.is_active %}
+                <span class="plan-badge">Active</span>
+                {% else %}
+                <span class="plan-badge inactive">Inactive</span>
+                {% endif %}
+                
+                <h4 class="plan-name">{{ plan.name }}</h4>
+                <div class="plan-price">₹{{ plan.price|floatformat:0 }} <span>/ {{ plan.duration_days }} Days</span></div>
+                
+                <div class="plan-stats">
+                  <div class="plan-stat">
+                    <span class="plan-stat-value">{{ plan.credits }}</span>
+                    <span class="plan-stat-label">Credits</span>
+                  </div>
+                  <div class="plan-stat">
+                    <span class="plan-stat-value">{{ plan.duration_days }}</span>
+                    <span class="plan-stat-label">Days Valid</span>
+                  </div>
+                </div>
+
+                <div class="plan-divider"></div>
+                
+                <ul class="plan-features">
+                  {% if plan.features %}
+                    {% for feature in plan.features %}
+                    <li><i class="fas fa-check-circle"></i> <span>{{ feature }}</span></li>
+                    {% endfor %}
+                  {% else %}
+                    <li style="color:#9ca3af; font-style:italic;"><i class="fas fa-info-circle" style="color:#d1d5db;"></i> <span>No features specified</span></li>
+                  {% endif %}
+                </ul>
+                
+                <button class="btn btn-primary" style="width:100%; border-radius:8px; padding:10px; font-weight:600; font-size:14px; margin-top:auto; box-shadow:0 2px 8px rgba(var(--primary-rgb), 0.2);" onclick="editPlan({{ plan.id }}, '{{ plan.name|escapejs }}', `{{ plan.features|join:'\n'|escapejs }}`, {{ plan.price }}, {{ plan.duration_days }}, {{ plan.credits }}, {{ plan.is_active|yesno:'true,false' }})">
+                  <i class="fas fa-pen" style="margin-right:8px;"></i> Edit Plan
+                </button>
+              </div>
+              {% empty %}
+              <p>No plans available.</p>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Transactions Table -->
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-receipt" style="color:var(--info);margin-right:8px"></i>Recent Transactions</h3>
+            <div style="display:flex;gap:8px">
+              <select class="form-select" style="width:auto;min-width:130px">
+                <option>All Types</option><option>Subscription</option><option>Renewal</option><option>Upgrade</option><option>Refund</option>
+              </select>
+              <select class="form-select" style="width:auto;min-width:130px">
+                <option>All Status</option><option>Completed</option><option>Pending</option><option>Failed</option><option>Refunded</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Transaction ID</th>
+                    <th>User</th>
+                    <th>Plan</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Payment</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="transactionsBody">
+                  {% for tx in recent_transactions %}
+                  <tr>
+                    <td><span style="font-family:monospace;color:var(--text-muted)">{{ tx.transaction_id|truncatechars:12 }}</span></td>
+                    <td>
+                      <div style="font-weight:600;color:var(--text-primary)">{{ tx.profile.user.first_name }} {{ tx.profile.user.last_name }}</div>
+                      <div style="font-size:0.75rem;color:var(--text-muted)">{{ tx.profile.mobile_number }}</div>
+                    </td>
+                    <td><span class="badge badge-primary">{{ tx.plan_name }}</span></td>
+                    <td>{{ tx.get_transaction_type_display }}</td>
+                    <td style="font-weight:700">₹{{ tx.amount }}</td>
+                    <td>
+                      {% if tx.status == 'completed' %}
+                        <span class="badge badge-success">Completed</span>
+                      {% elif tx.status == 'pending' %}
+                        <span class="badge badge-warning">Pending</span>
+                      {% elif tx.status == 'failed' %}
+                        <span class="badge badge-danger">Failed</span>
+                      {% else %}
+                        <span class="badge badge-secondary">{{ tx.get_status_display }}</span>
+                      {% endif %}
+                    </td>
+                    <td><span style="text-transform:uppercase;font-size:0.8rem;font-weight:600">{{ tx.payment_method }}</span></td>
+                    <td style="color:var(--text-secondary)">{{ tx.created_at|date:"d M Y, H:i" }}</td>
+                    <td>
+                      <button class="btn btn-icon btn-outline" title="View Details"><i class="fas fa-file-invoice"></i></button>
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr>
+                    <td colspan="9" style="text-align:center;padding:20px;color:var(--text-muted)">
+                      No recent transactions found.
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+    {% include 'dashboard/includes/pagination.html' %}
+          </div>
+        </div>
+      </div>
+
+      </div>
+
+      <!-- Plan Modal -->
+      <div class="modal-overlay" id="planModal">
+        <div class="modal">
+          <div class="modal-header">
+            <h3 id="modalTitle">Add New Plan</h3>
+            <button class="modal-close" onclick="Modal.close('planModal')"><i class="fas fa-times"></i></button>
+          </div>
+          <form method="POST" action="{% url 'subscriptions' %}">
+            {% csrf_token %}
+            <input type="hidden" name="id" id="planId">
+            <div class="modal-body">
+              <div class="form-group">
+                <label class="form-label">Plan Name <span style="color:var(--danger)">*</span></label>
+                <input type="text" name="name" id="planName" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Features</label>
+                <textarea name="features" id="planFeatures" class="form-control" rows="4" placeholder="Enter one feature per line"></textarea>
+                <small style="color:var(--text-light); font-size:12px; margin-top:4px; display:block;">Enter each feature on a new line</small>
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div class="form-group">
+                  <label class="form-label">Price (₹) <span style="color:var(--danger)">*</span></label>
+                  <input type="number" step="0.01" min="0" name="price" id="planPrice" class="form-control" value="0.00" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Duration (Days) <span style="color:var(--danger)">*</span></label>
+                  <input type="number" name="duration_days" min="1" id="planDuration" class="form-control" value="30" required>
+                </div>
+              </div>
+              <div class="form-group" style="margin-top:16px;">
+                <label class="form-label">Credits <span style="color:var(--danger)">*</span></label>
+                <input type="number" name="credits" min="0" id="planCredits" class="form-control" value="0" required>
+                <small style="color:var(--text-light); font-size:12px; margin-top:4px; display:block;">Number of credits allowed per subscription</small>
+              </div>
+              <div class="form-group" style="display:flex;align-items:center;gap:8px;margin-top:16px">
+                <input type="checkbox" name="is_active" id="planIsActive" checked>
+                <label for="planIsActive" style="margin:0">Plan is Active</label>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" onclick="Modal.close('planModal')">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save Plan</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="{% static 'dashboard/js/charts.js' %}"></script>
+  <script>
+    let revenueChart;
+    let chartData;
+    document.addEventListener('DOMContentLoaded', () => {
+      chartData = JSON.parse('{{ chart_data_json|escapejs }}');
+      revenueChart = createRevenueTrendChart('revenueTrendChart', 'monthly');
+      if (revenueChart) {
+        revenueChart.data.labels = chartData.labels;
+        revenueChart.data.datasets[0].data = chartData.revenue;
+        revenueChart.update();
+      }
+      const subChart = createSubscriptionChart('subscriptionChart');
+      if (subChart && chartData) {
+        subChart.data.labels = chartData.plan_labels;
+        subChart.data.datasets[0].data = chartData.plan_counts;
+        subChart.update();
+      }
+    });
+
+    function updateRevenueTrend(period) {
+      if (revenueChart) revenueChart.destroy();
+      revenueChart = createRevenueTrendChart('revenueTrendChart', period);
+      // For now, always show the monthly data regardless of dropdown
+      if (revenueChart && chartData) {
+        revenueChart.data.labels = chartData.labels;
+        revenueChart.data.datasets[0].data = chartData.revenue;
+        revenueChart.update();
+      }
+    }
+
+    function openPlanModal() {
+      document.getElementById('planId').value = '';
+      document.getElementById('planName').value = '';
+      document.getElementById('planFeatures').value = '';
+      document.getElementById('planPrice').value = '0.00';
+      document.getElementById('planDuration').value = '30';
+      document.getElementById('planCredits').value = '0';
+      document.getElementById('planIsActive').checked = true;
+      document.getElementById('modalTitle').innerText = 'Add New Plan';
+      if (typeof Modal !== 'undefined') {
+        Modal.open('planModal');
+      } else {
+        document.getElementById('planModal').classList.add('active'); // fallback if Modal object handles classes
+        document.getElementById('planModal').style.display = 'flex';
+      }
+    }
+
+    function editPlan(id, name, features, price, duration, credits, active) {
+      document.getElementById('planId').value = id;
+      document.getElementById('planName').value = name;
+      document.getElementById('planFeatures').value = features;
+      document.getElementById('planPrice').value = price;
+      document.getElementById('planDuration').value = duration;
+      document.getElementById('planCredits').value = credits;
+      document.getElementById('planIsActive').checked = active;
+      document.getElementById('modalTitle').innerText = 'Edit Plan';
+      if (typeof Modal !== 'undefined') {
+        Modal.open('planModal');
+      } else {
+        document.getElementById('planModal').classList.add('active'); // fallback
+        document.getElementById('planModal').style.display = 'flex';
+      }
+    }
+  </script>
+{% endblock %}

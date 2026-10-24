@@ -1,0 +1,94 @@
+{% extends "user_dashboard/base.html" %}
+{% load static %}
+
+{% block title %}My Designs{% endblock %}
+
+{% block active_designs %}active{% endblock %}
+
+{% block header_title %}
+<h2>My Designs</h2>
+<p>Your saved and generated designs</p>
+{% endblock %}
+
+{% block content %}
+<section class="page-section active">
+
+    {# ── Subscription gate: shown when the user has no active subscription ── #}
+    {% if not has_active_subscription %}
+    <div class="subscription-banner">
+        <div class="subscription-banner-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="subscription-banner-text">
+            <h4>Active Subscription Required</h4>
+            <p>Upgrade to Premium to unlock AI generation features, unlimited downloads, and 500+ exclusive templates.</p>
+        </div>
+        <a href="{% url 'user_dashboard:manage_subscription' %}" class="btn btn-upgrade" style="text-decoration: none; display: inline-flex; align-items: center;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Upgrade Now
+        </a>
+    </div>
+    {% endif %}
+
+    <div class="section-header">
+        <h3>📂 My Designs</h3>
+        <div class="filter-pills">
+            <button class="filter-pill active">All</button>
+            <button class="filter-pill">Recent</button>
+            <button class="filter-pill">Downloaded</button>
+            <button class="filter-pill">Drafts</button>
+        </div>
+    </div>
+
+    <div class="designs-grid">
+        {% for design in user_designs %}
+        <div class="card design-card">
+            <div class="design-card-image">
+                <img src="{{ design.image_url }}" alt="{{ design.name }}" loading="lazy">
+                <div class="design-card-overlay">
+                    <a href="{{ design.image_url }}" target="_blank" class="btn-icon" title="Preview">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </a>
+                    <a href="{% url 'user_dashboard:design_download' design.id %}" class="btn-icon" title="Download">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    </a>
+                </div>
+            </div>
+            <div class="design-card-body">
+                <h4>{{ design.name }}</h4>
+                <p class="date">Created on {{ design.created_at|date:"M d, Y" }}</p>
+                <div class="design-card-actions">
+                    <a href="{% url 'user_dashboard:design_download' design.id %}" class="btn btn-secondary btn-sm">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Download
+                    </a>
+                    <form action="{% url 'user_dashboard:design_delete' design.id %}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this design?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state" style="grid-column: 1 / -1;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            {% if not user.is_authenticated %}
+            <h4>Please Log In</h4>
+            <p>Log in to your account to view your saved and generated designs.</p>
+            <a href="{% url 'user_dashboard:login' %}" class="btn btn-primary btn-sm">Log In Now</a>
+            {% else %}
+            <h4>No designs yet</h4>
+            <p>Create your first poster with AI or start from a trending template.</p>
+            <a href="{% url 'user_dashboard:ai_generation' %}" class="btn btn-primary btn-sm">Create Your First Design</a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% include 'user_dashboard/includes/pagination.html' %}
+</section>
+{% endblock %}

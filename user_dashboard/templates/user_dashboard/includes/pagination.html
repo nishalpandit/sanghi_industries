@@ -1,0 +1,65 @@
+<!-- Reusable Modern Pagination Controls for User Dashboard -->
+{% if page_obj.has_other_pages %}
+<style>
+  .user-pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin: 40px 0 20px;
+    flex-wrap: wrap;
+  }
+  .user-pagination-container .pagination-btn,
+  .user-pagination-container .pagination-num {
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .user-pagination-container .pagination-btn:not(.disabled):hover,
+  .user-pagination-container .pagination-num:not(.active):hover {
+    background: rgba(124, 58, 237, 0.15) !important;
+    border-color: var(--primary, #7C3AED) !important;
+    color: var(--primary, #7C3AED) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(124, 58, 237, 0.22) !important;
+  }
+</style>
+
+<div class="user-pagination-container">
+  {% if page_obj.has_previous %}
+  <a href="?page={{ page_obj.previous_page_number }}{% if search_query or request.GET.q %}&q={{ search_query|default:request.GET.q|urlencode }}{% endif %}{% if selected_category or request.GET.category %}&category={{ selected_category|default:request.GET.category|urlencode }}{% endif %}{% if selected_parent or request.GET.parent %}&parent={{ selected_parent|default:request.GET.parent|urlencode }}{% endif %}" class="pagination-btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; background: var(--bg-card, #1E1B4B); border: 1px solid var(--border-light, rgba(255,255,255,0.1)); border-radius: var(--radius-full, 9999px); color: var(--text-main, #fff); text-decoration: none; font-size: 0.9rem; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    <span>Prev</span>
+  </a>
+  {% else %}
+  <span class="pagination-btn disabled" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; background: var(--bg-card, #1E1B4B); border: 1px solid var(--border-light, rgba(255,255,255,0.05)); border-radius: var(--radius-full, 9999px); color: var(--text-muted, #94A3B8); font-size: 0.9rem; font-weight: 600; opacity: 0.4; cursor: not-allowed;">
+    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    <span>Prev</span>
+  </span>
+  {% endif %}
+  
+  <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+    {% for num in page_obj.paginator.page_range %}
+      {% if page_obj.number == num %}
+      <span class="pagination-num active" style="display: inline-flex; align-items: center; justify-content: center; min-width: 40px; height: 40px; padding: 0 14px; background: var(--primary, #7C3AED); color: #fff; border-radius: var(--radius-full, 9999px); font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);">{{ num }}</span>
+      {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+      <a href="?page={{ num }}{% if search_query or request.GET.q %}&q={{ search_query|default:request.GET.q|urlencode }}{% endif %}{% if selected_category or request.GET.category %}&category={{ selected_category|default:request.GET.category|urlencode }}{% endif %}{% if selected_parent or request.GET.parent %}&parent={{ selected_parent|default:request.GET.parent|urlencode }}{% endif %}" class="pagination-num" style="display: inline-flex; align-items: center; justify-content: center; min-width: 40px; height: 40px; padding: 0 14px; background: var(--bg-card, #1E1B4B); border: 1px solid var(--border-light, rgba(255,255,255,0.1)); border-radius: var(--radius-full, 9999px); color: var(--text-main, #fff); text-decoration: none; font-weight: 600; font-size: 0.95rem;">{{ num }}</a>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  {% if page_obj.has_next %}
+  <a href="?page={{ page_obj.next_page_number }}{% if search_query or request.GET.q %}&q={{ search_query|default:request.GET.q|urlencode }}{% endif %}{% if selected_category or request.GET.category %}&category={{ selected_category|default:request.GET.category|urlencode }}{% endif %}{% if selected_parent or request.GET.parent %}&parent={{ selected_parent|default:request.GET.parent|urlencode }}{% endif %}" class="pagination-btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; background: var(--bg-card, #1E1B4B); border: 1px solid var(--border-light, rgba(255,255,255,0.1)); border-radius: var(--radius-full, 9999px); color: var(--text-main, #fff); text-decoration: none; font-size: 0.9rem; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+    <span>Next</span>
+    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+  </a>
+  {% else %}
+  <span class="pagination-btn disabled" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; background: var(--bg-card, #1E1B4B); border: 1px solid var(--border-light, rgba(255,255,255,0.05)); border-radius: var(--radius-full, 9999px); color: var(--text-muted, #94A3B8); font-size: 0.9rem; font-weight: 600; opacity: 0.4; cursor: not-allowed;">
+    <span>Next</span>
+    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+  </span>
+  {% endif %}
+
+  <div style="margin-left: 10px; padding: 8px 18px; background: rgba(124, 58, 237, 0.08); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: var(--radius-full, 9999px); font-size: 0.86rem; font-weight: 600; color: var(--text-muted, #94A3B8);">
+    Page <strong style="color: var(--primary, #7C3AED); font-size: 0.94rem;">{{ page_obj.number }}</strong> of <strong style="color: var(--text-main, #fff);">{{ page_obj.paginator.num_pages }}</strong>
+  </div>
+</div>
+{% endif %}

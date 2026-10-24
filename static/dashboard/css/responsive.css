@@ -1,0 +1,284 @@
+/* ========================================
+   Responsive Styles
+   ======================================== */
+
+/* Large Desktop */
+@media (max-width: 1400px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Medium Desktop / Tablet Landscape */
+@media (max-width: 1200px) {
+  .dashboard-grid,
+  .dashboard-grid-equal {
+    grid-template-columns: 1fr;
+  }
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+  }
+
+  .header-search input {
+    width: 200px;
+  }
+
+  .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .revenue-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Small Tablet */
+@media (max-width: 768px) {
+  .header {
+    padding: 0 16px;
+  }
+
+  .header-search {
+    display: none;
+  }
+
+  .header-profile-info {
+    display: none;
+  }
+
+  .page-content {
+    padding: 16px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .page-actions {
+    width: 100%;
+  }
+
+  .page-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .data-table {
+    font-size: 0.8rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 8px 10px;
+  }
+
+  .welcome-banner {
+    padding: 20px;
+  }
+
+  .welcome-content h2 {
+    font-size: 1.1rem;
+  }
+
+  .quick-actions {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .modal {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .notification-panel {
+    width: 300px;
+    right: -60px;
+  }
+
+  .tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tab-item {
+    padding: 8px 14px;
+    font-size: 0.8rem;
+  }
+
+  .template-stats-bar {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  body {
+    font-size: 14px;
+  }
+
+  h1 { font-size: 1.4rem; }
+  h2 { font-size: 1.2rem; }
+
+  .page-content {
+    padding: 12px;
+  }
+
+  .card-header {
+    padding: 12px 16px;
+  }
+
+  .card-body {
+    padding: 16px;
+  }
+
+  .stat-card {
+    padding: 16px;
+  }
+
+  .stat-info .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .welcome-banner {
+    padding: 16px;
+  }
+
+  .welcome-actions {
+    flex-direction: column;
+  }
+
+  .welcome-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .quick-actions {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .quick-action-btn {
+    padding: 12px;
+  }
+
+  .quick-action-btn i {
+    font-size: 1.2rem;
+  }
+
+  .quick-action-btn span {
+    font-size: 0.72rem;
+  }
+
+  .pagination {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .export-buttons {
+    flex-direction: column;
+  }
+
+  .template-stats-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .user-profile-panel {
+    width: 100%;
+    right: -100%;
+  }
+
+  .category-pills {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 360px) {
+  .header-right {
+    gap: 4px;
+  }
+
+  .header-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .stats-grid {
+    gap: 12px;
+  }
+}
+
+/* Height considerations */
+@media (max-height: 700px) {
+  .sidebar-nav {
+    padding: 8px 0;
+  }
+
+  .nav-link {
+    padding: 8px 20px;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .sidebar,
+  .header,
+  .footer,
+  .page-actions,
+  .sidebar-overlay,
+  .btn,
+  .quick-actions {
+    display: none !important;
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+  }
+
+  .page-content {
+    padding: 0;
+  }
+
+  .card {
+    box-shadow: none;
+    border: 1px solid #ddd;
+    page-break-inside: avoid;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+}

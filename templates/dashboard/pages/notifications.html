@@ -1,0 +1,152 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block content %}
+<div class="page-header">
+          <div>
+            <h1>Notification Management</h1>
+            <div class="breadcrumb"><a href="{% url 'dashboard' %}">Dashboard</a><i class="fas fa-chevron-right"></i><span>Notifications</span></div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="Modal.open('createNotificationModal')"><i class="fas fa-plus"></i> Create Notification</button>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+          <div class="stat-card primary">
+            <div class="stat-info"><h3>Total Sent</h3><div class="stat-value">{{ total_sent|default:"0" }}</div><div class="stat-change positive"><i class="fas fa-arrow-up"></i> {{ total_sent_change|default:"0" }}%</div></div>
+            <div class="stat-icon primary"><i class="fas fa-paper-plane"></i></div>
+          </div>
+          <div class="stat-card success">
+            <div class="stat-info"><h3>Delivery Rate</h3><div class="stat-value">{{ delivery_rate|default:"0" }}%</div><div class="stat-change positive"><i class="fas fa-arrow-up"></i> {{ delivery_rate_change|default:"0" }}%</div></div>
+            <div class="stat-icon success"><i class="fas fa-check-double"></i></div>
+          </div>
+          <div class="stat-card warning">
+            <div class="stat-info"><h3>Open Rate</h3><div class="stat-value">{{ open_rate|default:"0" }}%</div><div class="stat-change positive"><i class="fas fa-arrow-up"></i> {{ open_rate_change|default:"0" }}%</div></div>
+            <div class="stat-icon warning"><i class="fas fa-envelope-open"></i></div>
+          </div>
+          <div class="stat-card info">
+            <div class="stat-info"><h3>Scheduled</h3><div class="stat-value">{{ scheduled_notifications|default:"0" }}</div><div class="stat-change positive"><i class="fas fa-arrow-up"></i> {{ scheduled_notifications_change|default:"0" }}</div></div>
+            <div class="stat-icon info"><i class="fas fa-calendar-check"></i></div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="card">
+          <div class="card-body">
+            <div class="tabs">
+              <div class="tab-item active" data-tab="allNotifications">All Notifications</div>
+              <div class="tab-item" data-tab="scheduledTab">Scheduled</div>
+              <div class="tab-item" data-tab="templatesTab">Templates</div>
+              <div class="tab-item" data-tab="segmentsTab">User Segments</div>
+            </div>
+
+            <!-- All Notifications Tab -->
+            <div class="tab-content active" id="allNotifications">
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Notification</th>
+                      <th>Type</th>
+                      <th>Audience</th>
+                      <th>Sent</th>
+                      <th>Delivered</th>
+                      <th>Opened</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="notificationsTable"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Scheduled Tab -->
+            <div class="tab-content" id="scheduledTab">
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Notification</th>
+                      <th>Type</th>
+                      <th>Scheduled For</th>
+                      <th>Target Audience</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="scheduledTable"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Templates Tab -->
+            <div class="tab-content" id="templatesTab">
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px" id="notifTemplates"></div>
+            </div>
+
+            <!-- Segments Tab -->
+            <div class="tab-content" id="segmentsTab">
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px" id="userSegments"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+<!-- Create Notification Modal -->
+  <div class="modal-overlay" id="createNotificationModal">
+    <div class="modal" style="max-width:600px">
+      <div class="modal-header">
+        <h3>Create Notification</h3>
+        <button class="modal-close" onclick="Modal.close('createNotificationModal')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input type="text" class="form-control" placeholder="Notification title...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Message</label>
+          <textarea class="form-control" rows="4" placeholder="Write your notification message..."></textarea>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <select class="form-select">
+              <option>Promotion</option><option>Festival Alert</option><option>New Template</option><option>System Update</option><option>Custom</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Target Audience</label>
+            <select class="form-select">
+              <option>All Users</option><option>Free Users</option><option>Premium Users</option><option>Inactive Users</option><option>New Users (7 days)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Schedule</label>
+          <div style="display:flex;gap:12px;align-items:center">
+            <label class="form-check"><input type="radio" name="schedule" checked> Send Now</label>
+            <label class="form-check"><input type="radio" name="schedule"> Schedule</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Schedule Date & Time</label>
+          <input type="datetime-local" class="form-control">
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="Modal.close('createNotificationModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="Modal.close('createNotificationModal');Toast.show('Notification sent successfully!','success')">
+          <i class="fas fa-paper-plane"></i> Send Notification
+        </button>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}

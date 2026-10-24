@@ -1,0 +1,291 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard{% endblock %} | PosterAI</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'user_dashboard/css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+    <!-- ===== SIDEBAR OVERLAY (Mobile) ===== -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand" style="display: flex; align-items: center; padding: 20px 24px; gap: 12px;">
+            <img src="{% static 'dashboard/images/logo.png' %}" alt="Logo"
+                style="height: 38px; width: auto; object-fit: contain;">
+            <!-- <span style="font-weight: 700; font-size: 15px; background: linear-gradient(135deg, #a855f7, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Studio</span> -->
+        </div>
+
+        {# NOTE: Replace each href="#" with your {% url %} tag, e.g. {% url 'user_dashboard:trending' %} #}
+        <nav class="sidebar-nav">
+            <div class="sidebar-section-label">Main Menu</div>
+
+            <a href="{% url 'user_dashboard:trending' %}"
+                class="sidebar-nav-item {% block active_trending %}{% endblock %}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                </svg>
+                Trending Templates
+                <span class="sidebar-nav-badge">New</span>
+            </a>
+
+            <a href="{% url 'user_dashboard:flex_designs' %}"
+                class="sidebar-nav-item {% block active_flex_designs %}{% endblock %}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M12 19l7-7 3 3-7 7-3-3z" />
+                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
+                    <path d="M2 2l7.586 7.586" />
+                    <circle cx="11" cy="11" r="2" />
+                </svg>
+                Flex Designs
+            </a>
+
+            <a href="{% url 'user_dashboard:my_designs' %}"
+                class="sidebar-nav-item {% block active_designs %}{% endblock %}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                </svg>
+                My Designs
+            </a>
+
+            <a href="{% url 'user_dashboard:ai_generation' %}"
+                class="sidebar-nav-item {% block active_ai %}{% endblock %}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93L12 22" />
+                    <path d="M8 6a4 4 0 0 0-4 4c0 1.95 1.4 3.58 3.25 3.93" />
+                    <path d="M16 6a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93" />
+                </svg>
+                AI Generation
+                <span class="sidebar-nav-badge" style="background: var(--accent);">AI</span>
+            </a>
+
+            <div class="sidebar-section-label">Browse</div>
+
+            <a href="{% url 'user_dashboard:categories' %}"
+                class="sidebar-nav-item {% block active_categories %}{% endblock %}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM17 14v6M14 17h6" />
+                </svg>
+                Categories
+            </a>
+
+            <div class="sidebar-section-label">Account</div>
+
+            <a href="{% url 'user_dashboard:feedback' %}"
+                class="sidebar-nav-item {% block active_feedback %}{% endblock %}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                Feedback
+            </a>
+
+            <a href="{% url 'user_dashboard:profile' %}"
+                class="sidebar-nav-item {% block active_profile %}{% endblock %}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg>
+                Profile
+            </a>
+        </nav>
+
+        <div class="sidebar-footer" style="display: flex; align-items: center; justify-content: space-between;">
+            <a href="{% url 'user_dashboard:profile' %}" class="sidebar-user" style="flex: 1; overflow: hidden;">
+                <img src="{{ user_avatar_url|default:'https://images.pexels.com/photos/5308640/pexels-photo-5308640.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' }}"
+                    alt="{{ user.username|default:'User' }}" class="sidebar-user-avatar">
+                <div class="sidebar-user-info" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    <h4>{% if user.is_authenticated %}{{ user.username }}{% else %}Guest User{% endif %}</h4>
+                    <span>{{ subscription_status|default:'Free Plan' }}</span>
+                </div>
+            </a>
+            {% if user.is_authenticated %}
+            <a href="{% url 'user_dashboard:logout' %}" title="Logout"
+                style="color: var(--text-secondary); padding: 8px; border-radius: 6px; transition: 0.2s;"
+                onmouseover="this.style.color='#ff4d4d'" onmouseout="this.style.color='var(--text-secondary)'">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+            </a>
+            {% endif %}
+        </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="main-content">
+
+        <!-- ===== HEADER ===== -->
+        <header class="header">
+            <div class="header-left">
+                <button class="header-hamburger" id="hamburgerBtn" aria-label="Toggle menu">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12" />
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <line x1="3" y1="18" x2="21" y2="18" />
+                    </svg>
+                </button>
+                <div class="header-title">
+                    {% block header_title %}
+                    <h2>Dashboard</h2>
+                    <p>Welcome back</p>
+                    {% endblock %}
+                </div>
+            </div>
+            <div class="header-right">
+
+                <a href="{% url 'user_dashboard:logout' %}" style="display:inline-block;background:#e53935;color:#fff;padding:9px 18px;font-size:14px;font-weight:600;text-decoration:none;border-radius:6px;cursor:pointer;box-shadow:0 3px 8px rgba(229,57,53,.25);transition:.2s;" onmouseover="this.style.background='#c62828';this.style.transform='translateY(-1px)'" onmouseout="this.style.background='#e53935';this.style.transform='translateY(0)'">Logout</a>
+                    <!-- <div class="header-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <form action="{% url 'user_dashboard:trending' %}" method="GET">
+                    <input type="text" name="q" placeholder="Search templates, designs..." value="{{ request.GET.q|default:'' }}">
+                </form>
+            </div> -->
+                    <!-- Mobile-only search trigger (visible ≤640px) -->
+                    <!-- <button class="header-btn header-search-btn" type="button" onclick="toggleMobileSearch()" aria-label="Search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button> -->
+                    <!-- <button class="header-btn" aria-label="Notifications">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                {% if unread_notifications %}<span class="badge-dot"></span>{% endif %}
+            </button> -->
+                    <!-- <button class="header-btn" aria-label="Settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button> -->
+            </div>
+
+            <!-- Collapsible full-width search bar (phones ≤640px, toggled via main.js) -->
+            <div class="mobile-search-bar" id="mobileSearchBar">
+                <form action="{% url 'user_dashboard:trending' %}" method="GET">
+                    <input type="text" name="q" placeholder="Search templates, designs..."
+                        value="{{ request.GET.q|default:'' }}">
+                </form>
+            </div>
+        </header>
+
+        <!-- ===== PAGE CONTENT ===== -->
+        <div class="page-container">
+            {% if messages %}
+            {% for message in messages %}
+            <div class="subscription-banner" style="background: var(--success-light); border-color: var(--success);">
+                <div class="subscription-banner-text">
+                    <p style="color: #1B7A5A;">{{ message }}</p>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- ===== SUBSCRIPTION MODAL (shared) ===== -->
+    <div class="modal-overlay" id="subscriptionModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Upgrade to Premium</h3>
+                <button class="modal-close" onclick="closeSubscriptionModal()" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-icon-wrapper warning">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <polygon
+                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                </div>
+                <div class="modal-text">
+                    <h4>Unlock Full AI Power</h4>
+                    <p>Active subscription is required before using AI generation features. Upgrade to Premium to unlock
+                        unlimited poster generations, HD downloads, and 500+ exclusive templates.</p>
+                </div>
+                <div style="max-height: 380px; overflow-y: auto; padding-right: 4px; margin-bottom: 20px;">
+                    {% for plan in global_subscription_plans %}
+                    <div style="background: var(--bg-input); border-radius: var(--radius-md); border: 1px solid var(--border); padding: 16px; margin-bottom: 12px; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)';this.style.boxShadow='0 4px 12px rgba(124, 58, 237, 0.15)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <div>
+                                <strong style="font-weight: 800; font-size: 1.05rem; color: var(--text-main); display: block;">{{ plan.name }}</strong>
+                                <span style="font-size: 0.8rem; color: #10b981; font-weight: 700;">⚡ {{ plan.credits }} AI Generation Credits</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="font-weight: 900; font-size: 1.3rem; color: var(--primary);">₹{{ plan.price|floatformat:0 }}<span style="font-size: 0.75rem; font-weight: 500; color: var(--text-muted);">/{{ plan.duration_days }}d</span></span>
+                            </div>
+                        </div>
+                        <ul style="font-size: 0.82rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 6px; margin: 10px 0 14px; padding: 0; list-style: none;">
+                            {% for feature in plan.features %}
+                            <li style="display: flex; align-items: center; gap: 8px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0;"><polyline points="20 6 9 17 4 12" /></svg>
+                                <span>{{ feature }}</span>
+                            </li>
+                            {% empty %}
+                            <li style="display: flex; align-items: center; gap: 8px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0;"><polyline points="20 6 9 17 4 12" /></svg>
+                                <span>{{ plan.credits }} AI Generation Credits included</span>
+                            </li>
+                            <li style="display: flex; align-items: center; gap: 8px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0;"><polyline points="20 6 9 17 4 12" /></svg>
+                                <span>{{ plan.duration_days }}-day full platform validity</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        <a href="{% url 'user_dashboard:select_subscription_plan' plan.id %}" class="btn btn-primary" style="width: 100%; padding: 10px; border-radius: 8px; font-size: 0.88rem; font-weight: 700; text-align: center; justify-content: center; display: flex; text-decoration: none;">
+                            Activate &amp; Claim {{ plan.credits }} Credits (₹{{ plan.price|floatformat:0 }})
+                        </a>
+                    </div>
+                    {% empty %}
+                    <div style="text-align: center; padding: 24px; color: var(--text-muted); font-size: 0.9rem; background: var(--bg-input); border-radius: var(--radius-md); border: 1px dashed var(--border);">
+                        No subscription plans currently configured in Admin Panel.
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="modal-actions" style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                    <button class="btn btn-secondary" onclick="closeSubscriptionModal()" style="flex: 1; justify-content: center;">Close</button>
+                    <a href="{% url 'user_dashboard:manage_subscription' %}" class="btn btn-upgrade" style="flex: 1; justify-content: center; text-decoration: none; display: inline-flex; align-items: center;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                        </svg>
+                        View Full Billing Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TOAST CONTAINER ===== -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="{% static 'user_dashboard/js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+
+</body>
+
+</html>

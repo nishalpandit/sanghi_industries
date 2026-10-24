@@ -1,0 +1,539 @@
+{% extends "user_dashboard/base.html" %}
+{% load static %}
+
+{% block title %}AI Generation{% endblock %}
+
+{% block active_ai %}active{% endblock %}
+
+{% block header_title %}
+<h2>AI Generation</h2>
+{% endblock %}
+
+{% block content %}
+<section class="page-section active">
+
+    <!-- ── PLAN & CREDITS STATUS BAR ── -->
+    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 16px 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(124, 58, 237, 0.1); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.4rem;">
+                💎
+            </div>
+            <div>
+                <span style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700;">Your Plan</span>
+                <h4 style="margin: 0; font-size: 1.15rem; color: var(--text-main); font-weight: 800;">{{ plan_name|default:"Free" }} Plan</h4>
+            </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+            <div style="background: var(--bg-input); border: 1px solid var(--border); padding: 8px 18px; border-radius: 30px; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 1.2rem;">⚡</span>
+                <div>
+                    <span style="font-size: 0.9rem; color: #1b1b94; display: block; font-weight: 600; line-height: 1;">AI Credits  = <strong style="font-size: 0.9rem; color: {% if credits_available > 0 %}#030376{% else %}#e70000{% endif %};" id="creditsDisplay">{{ credits_available|default:"0" }}</strong></span>
+                   
+                </div>
+            </div>
+            <a href="{% url 'user_dashboard:manage_subscription' %}" class="btn btn-upgrade" style="padding: 10px 20px; font-weight: 700; border-radius: 30px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+                {% if credits_available <= 0 %}Buy Credits / Upgrade{% else %}Manage Plan{% endif %}
+            </a>
+        </div>
+    </div>
+
+    {% if credits_available <= 0 or not has_active_subscription %}
+    <div class="subscription-banner" style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 16px; padding: 18px 24px; margin-bottom: 24px; display: flex; align-items: center; gap: 16px;">
+        <div class="subscription-banner-icon" style="background: #ef4444; color: #fff; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div class="subscription-banner-text" style="flex: 1;">
+            <h4 style="margin: 0 0 4px; font-size: 1.1rem; color: #dc2626;">{% if credits_available <= 0 %}AI Generation Credits Exhausted{% else %}Active Subscription Required{% endif %}</h4>
+            <p style="margin: 0; color: var(--text-muted); font-size: 0.92rem;">
+                {% if credits_available <= 0 %}
+                You have 0 AI generation credits remaining on your <strong>{{ plan_name|default:"Free" }}</strong> plan. Each AI image generation costs 1 credit. Please upgrade or renew your plan to continue generating!
+                {% else %}
+                AI generation requires an active subscription plan with generation credits.
+                {% endif %}
+            </p>
+        </div>
+        <a href="{% url 'user_dashboard:manage_subscription' %}" class="btn btn-primary" style="background: #ef4444; border-color: #ef4444; color: #fff; padding: 10px 22px; border-radius: 30px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center;">Get More Credits</a>
+    </div>
+    {% endif %}
+
+    <div class="ai-gen-layout">
+
+        <!-- Left Panel: Controls -->
+        <div class="ai-gen-panel">
+            <div class="ai-gen-panel-header">
+                <div class="ai-gen-panel-header-icon purple">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93L12 22"/><path d="M8 6a4 4 0 0 0-4 4c0 1.95 1.4 3.58 3.25 3.93"/><path d="M16 6a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93"/></svg>
+                </div>
+                <h3>AI Poster Generator</h3>
+            </div>
+            <div class="ai-gen-panel-body">
+                {# POST to your generation endpoint, e.g. {% url 'user_dashboard:generate' %} #}
+                <form method="POST" action="#">
+                    {% csrf_token %}
+
+                    <!-- Reference Image / Template Display (Dynamic) -->
+                    <div id="referenceCardContainer" style="display: none; background: rgba(108, 92, 231, 0.04); border: 1px solid var(--primary-light); border-radius: 14px; padding: 12px 16px; margin-bottom: 20px; align-items: center; justify-content: space-between; gap: 14px; box-shadow: 0 4px 12px rgba(108, 92, 231, 0.08);">
+                        <div style="display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1;">
+                            <img id="refThumbImg" src="{{ ref_image|default:'' }}" alt="Reference Template" style="width: 56px; height: 56px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.3); flex-shrink: 0;">
+                            <div style="min-width: 0; flex: 1;">
+                                <span style="font-size: 0.75rem; color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px;">
+                                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                                    Reference Template Active
+                                </span>
+                                <h4 id="refTitleText" style="margin: 3px 0 0; font-size: 0.98rem; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ ref_title|default:"Selected Design" }}</h4>
+                            </div>
+                        </div>
+                        <button type="button" onclick="clearReferenceTemplate()" style="background: #fff; border: 1px solid var(--border); border-radius: 8px; color: var(--text-secondary); padding: 6px 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--danger-light)';this.style.color='var(--danger)';this.style.borderColor='var(--danger-light)'" onmouseout="this.style.background='#fff';this.style.color='var(--text-secondary)';this.style.borderColor='var(--border)'">Unlink</button>
+                    </div>
+                    <input type="hidden" name="ref_image" id="refImageInput" value="{{ ref_image|default:'' }}">
+                    <input type="hidden" name="ref_title" id="refTitleInput" value="{{ ref_title|default:'' }}">
+                    <input type="hidden" name="ref_category" id="refCategoryInput" value="{{ ref_category|default:'' }}">
+
+                    <!-- Prompt -->
+                    <div class="form-group">
+                        <label class="form-label" for="prompt">Prompt <span>(Describe your poster idea)</span></label>
+                        <textarea class="form-textarea" id="prompt" name="prompt" required
+                                  placeholder="A vibrant Diwali celebration poster with traditional diyas, rangoli patterns, and golden sparkles on a deep purple background...">{{ form.prompt.value|default:'' }}</textarea>
+                    </div>
+
+                    <!-- Aspect Ratio -->
+                    <div class="form-group">
+                        <label class="form-label">Aspect Ratio</label>
+                        <div class="aspect-ratio-options">
+                            {% for ratio in aspect_ratios %}
+                            <button type="button" class="aspect-ratio-option {% if forloop.first %}active{% endif %}" data-ratio="{{ ratio.value }}">{{ ratio.label }}</button>
+                            {% empty %}
+                            <button type="button" class="aspect-ratio-option" data-ratio="1:1">1:1</button>
+                            <button type="button" class="aspect-ratio-option active" data-ratio="9:16">9:16</button>
+                            <button type="button" class="aspect-ratio-option" data-ratio="16:9">16:9</button>
+                            <button type="button" class="aspect-ratio-option" data-ratio="4:5">4:5</button>
+                            <button type="button" class="aspect-ratio-option" data-ratio="3:4">3:4</button>
+                            <button type="button" class="aspect-ratio-option" data-ratio="A4">A4</button>
+                            {% endfor %}
+                        </div>
+                        <input type="hidden" name="aspect_ratio" id="aspectRatioInput" value="9:16">
+                    </div>
+
+                    <!-- Style -->
+                    <div class="form-group">
+                        <label class="form-label">Style</label>
+                        <div class="style-chips">
+                            {% for style in styles %}
+                            <button type="button" class="style-chip {% if forloop.first %}active{% endif %}" data-style="{{ style.value }}">{{ style.label }}</button>
+                            {% empty %}
+                            <button type="button" class="style-chip active">Photorealistic</button>
+                            <button type="button" class="style-chip">Illustration</button>
+                            <button type="button" class="style-chip">Watercolor</button>
+                            <button type="button" class="style-chip">3D Render</button>
+                            <button type="button" class="style-chip">Flat Design</button>
+                            <button type="button" class="style-chip">Vintage</button>
+                            <button type="button" class="style-chip">Neon</button>
+                            <button type="button" class="style-chip">Minimalist</button>
+                            {% endfor %}
+                        </div>
+                        <input type="hidden" name="style" id="styleInput" value="Photorealistic">
+                    </div>
+
+                    <!-- Custom RGB Multi-Color Theme Builder -->
+                    <div class="form-group">
+                        <label class="form-label" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                            <span>Color Theme & RGB Palette <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal;">(Click swatches to choose RGB colors)</span></span>
+                            <div style="position: relative; display: inline-block;">
+                                <button type="button" onclick="openAddRgbPicker()" style="background: rgba(124, 58, 237, 0.15); color: var(--primary); border: 1px solid rgba(124, 58, 237, 0.35); padding: 5px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(124, 58, 237, 0.28)';this.style.boxShadow='0 0 10px rgba(124, 58, 237, 0.4)'" onmouseout="this.style.background='rgba(124, 58, 237, 0.15)';this.style.boxShadow='none'">
+                                    + Add Color
+                                </button>
+                                <input type="color" id="addRgbPickerInput" title="Click to pick and add a custom RGB color" value="#10B981" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
+                            </div>
+                        </label>
+                        
+                        <!-- Interactive RGB Color Pills Container -->
+                        <div id="rgbPaletteContainer" style="display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0 14px;">
+                            <!-- Dynamically populated via JS with 1st Color, 2nd Color, 3rd Color -->
+                        </div>
+                        
+                        <!-- Real-time Palette Gradient Bar Preview -->
+                        <!-- <div style="display: flex; align-items: center; gap: 12px; background: var(--bg-input); padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border);">
+                            <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Theme Preview</span>
+                            <div id="rgbPalettePreviewBar" style="height: 14px; flex: 1; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.2); transition: background 0.3s;"></div>
+                        </div> -->
+
+                        <input type="hidden" name="color_theme" id="colorThemeInput" value="">
+                    </div>
+
+                    <!-- Generate Button -->
+                    <button type="button" id="generatePosterBtn" class="btn btn-primary" onclick="generateAiPoster()"
+                            style="width: 100%; padding: 14px; font-size: 0.95rem; border-radius: var(--radius-md); font-weight: 700;"
+                            {% if credits_available <= 0 or not has_active_subscription %}disabled{% endif %}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93L12 22"/><path d="M8 6a4 4 0 0 0-4 4c0 1.95 1.4 3.58 3.25 3.93"/><path d="M16 6a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93"/></svg>
+                        Generate Poster (1 Credit)
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Panel: Result Preview -->
+        <div class="ai-gen-panel">
+            <div class="ai-gen-panel-header">
+                <div class="ai-gen-panel-header-icon teal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                </div>
+                <h3>Preview</h3>
+            </div>
+            <div class="ai-gen-panel-body">
+                <div class="ai-gen-result-area" id="aiResultArea">
+                    {% if generated_poster %}
+                        <img src="{{ generated_poster.image.url }}" alt="Generated Poster"
+                             style="width:100%;border-radius:var(--radius-md);margin-bottom:16px;">
+                        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+                            <a href="{{ generated_poster.image.url }}" download class="btn btn-primary btn-sm">Download</a>
+                            <button class="btn btn-secondary btn-sm" onclick="saveGeneratedPoster()">Save</button>
+                        </div>
+                    {% else %}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        <h4>Your poster will appear here</h4>
+                        <p>Enter a prompt and click "Generate" to create your AI poster</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    /* ---- AI Generation page: selector toggles + generation placeholder ---- */
+    function bindSingleActive(selector, hiddenInputId, dataAttr) {
+        document.querySelectorAll(selector).forEach(function (el) {
+            el.addEventListener('click', function () {
+                document.querySelectorAll(selector).forEach(function (o) { o.classList.remove('active'); });
+                this.classList.add('active');
+                var hidden = document.getElementById(hiddenInputId);
+                if (hidden) hidden.value = this.getAttribute(dataAttr) || this.textContent.trim();
+            });
+        });
+    }
+
+    bindSingleActive('.aspect-ratio-option', 'aspectRatioInput', 'data-ratio');
+    bindSingleActive('.style-chip', 'styleInput', 'data-style');
+
+    /* ---- Custom RGB Palette Selector Logic ---- */
+    var currentRgbColors = [];
+    var colorLabels = ['1st color', '2nd color', '3rd color', '4th color', '5th color', '6th color', '7th color', '8th color'];
+
+    function renderRgbPalette() {
+        var container = document.getElementById('rgbPaletteContainer');
+        if (!container) return;
+        container.innerHTML = '';
+
+        if (currentRgbColors.length === 0) {
+            container.innerHTML = '<div style="color: var(--text-muted); font-size: 0.88rem; font-style: italic; padding: 6px 4px;">No colors added yet. Click "+ Add Color" above to choose your custom RGB theme!</div>';
+            updateRgbHiddenInput();
+            return;
+        }
+
+        currentRgbColors.forEach(function(col, idx) {
+            var label = colorLabels[idx] || (idx + 1) + 'th color';
+            
+            var chip = document.createElement('div');
+            chip.style.cssText = "position: relative; display: inline-flex; align-items: center; gap: 8px; background: var(--bg-card); border: 1.5px solid " + col + "; padding: 8px 15px; border-radius: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.2s; user-select: none;";
+            chip.onmouseover = function() { chip.style.transform = 'translateY(-2px)'; chip.style.boxShadow = '0 4px 14px rgba(0,0,0,0.3)'; };
+            chip.onmouseout = function() { chip.style.transform = 'translateY(0)'; chip.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)'; };
+
+            var circle = document.createElement('span');
+            circle.style.cssText = "width: 20px; height: 20px; border-radius: 50%; background-color: " + col + "; box-shadow: 0 0 8px " + col + "; border: 2px solid #ffffff; display: inline-block; flex-shrink: 0;";
+            
+            var text = document.createElement('span');
+            text.style.cssText = "font-size: 0.85rem; font-weight: 700; color: var(--text-main);";
+            text.textContent = label;
+
+            var colorInput = document.createElement('input');
+            colorInput.type = 'color';
+            colorInput.value = col;
+            colorInput.title = "Click to pick RGB color for " + label;
+            colorInput.style.cssText = "position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;";
+            
+            colorInput.addEventListener('input', function(e) {
+                currentRgbColors[idx] = e.target.value;
+                circle.style.backgroundColor = e.target.value;
+                circle.style.boxShadow = "0 0 8px " + e.target.value;
+                chip.style.borderColor = e.target.value;
+                updateRgbHiddenInput();
+            });
+
+            chip.appendChild(circle);
+            chip.appendChild(text);
+            chip.appendChild(colorInput);
+
+            var removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.innerHTML = '✕';
+            removeBtn.title = "Remove " + label;
+            removeBtn.style.cssText = "position: relative; z-index: 2; background: none; border: none; color: var(--text-muted); font-size: 0.8rem; cursor: pointer; padding: 0 4px; margin-left: 2px; line-height: 1; font-weight: bold; transition: color 0.2s;";
+            removeBtn.onmouseover = function() { removeBtn.style.color = '#ef4444'; };
+            removeBtn.onmouseout = function() { removeBtn.style.color = 'var(--text-muted)'; };
+            removeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                currentRgbColors.splice(idx, 1);
+                renderRgbPalette();
+            });
+            chip.appendChild(removeBtn);
+
+            container.appendChild(chip);
+        });
+
+        updateRgbHiddenInput();
+    }
+
+    function openAddRgbPicker() {
+        var picker = document.getElementById('addRgbPickerInput');
+        if (picker) picker.click();
+    }
+
+    function initAddRgbListener() {
+        var addPicker = document.getElementById('addRgbPickerInput');
+        if (addPicker) {
+            addPicker.addEventListener('change', function(e) {
+                if (currentRgbColors.length >= 8) {
+                    showToast('Maximum 8 RGB colors allowed in your theme!');
+                    return;
+                }
+                var chosenColor = e.target.value;
+                currentRgbColors.push(chosenColor);
+                renderRgbPalette();
+                showToast(colorLabels[currentRgbColors.length - 1] + ' (' + chosenColor + ') added to theme!');
+            });
+        }
+    }
+
+    function updateRgbHiddenInput() {
+        var hidden = document.getElementById('colorThemeInput');
+        var previewBar = document.getElementById('rgbPalettePreviewBar');
+        if (hidden) {
+            hidden.value = currentRgbColors.join(', ');
+        }
+        if (previewBar) {
+            if (currentRgbColors.length === 0) {
+                previewBar.style.background = 'rgba(255, 255, 255, 0.04)';
+                previewBar.style.border = '1px dashed var(--border)';
+                previewBar.title = 'No custom RGB colors selected yet';
+            } else if (currentRgbColors.length === 1) {
+                previewBar.style.border = '1px solid var(--border)';
+                previewBar.title = 'Theme preview: ' + currentRgbColors[0];
+                previewBar.style.background = currentRgbColors[0];
+            } else {
+                previewBar.style.border = '1px solid var(--border)';
+                previewBar.title = 'Theme gradient preview';
+                previewBar.style.background = "linear-gradient(90deg, " + currentRgbColors.join(', ') + ")";
+            }
+        }
+    }
+
+    /* ---- Reference Template Initialization & Unlink ---- */
+    function initReferenceTemplate() {
+        var urlParams = new URLSearchParams(window.location.search);
+        var urlImage = urlParams.get('ref_image') || document.getElementById('refImageInput').value;
+        var urlTitle = urlParams.get('title') || document.getElementById('refTitleInput').value || urlParams.get('category');
+        var urlCategory = urlParams.get('category') || document.getElementById('refCategoryInput').value;
+        
+        if (urlImage && urlImage.trim() !== '') {
+            var thumb = document.getElementById('refThumbImg');
+            if (thumb) thumb.src = urlImage;
+            document.getElementById('refImageInput').value = urlImage;
+            var titleEl = document.getElementById('refTitleText');
+            if (titleEl) titleEl.textContent = urlTitle || "Selected Reference Template";
+            document.getElementById('refTitleInput').value = urlTitle || "Selected Reference Template";
+            if (urlCategory) document.getElementById('refCategoryInput').value = urlCategory;
+            var container = document.getElementById('referenceCardContainer');
+            if (container) container.style.display = 'flex';
+        }
+    }
+
+    function clearReferenceTemplate() {
+        document.getElementById('refImageInput').value = '';
+        document.getElementById('refTitleInput').value = '';
+        document.getElementById('refCategoryInput').value = '';
+        var container = document.getElementById('referenceCardContainer');
+        if (container) container.style.display = 'none';
+        showToast('Reference template removed from prompt.');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        renderRgbPalette();
+        initReferenceTemplate();
+        initAddRgbListener();
+    });
+
+    /* Dynamic OpenAI image generation call */
+    function generateAiPoster() {
+        var promptInput = document.getElementById('prompt');
+        if (!promptInput || !promptInput.value.trim()) {
+            showToast('Please enter a description for your poster!');
+            if (promptInput) promptInput.focus();
+            return;
+        }
+
+        var aspectRatio = document.getElementById('aspectRatioInput') ? document.getElementById('aspectRatioInput').value : '9:16';
+        var style = document.getElementById('styleInput') ? document.getElementById('styleInput').value : 'Photorealistic';
+        var colorTheme = document.getElementById('colorThemeInput') ? document.getElementById('colorThemeInput').value : '';
+        var refImage = document.getElementById('refImageInput') ? document.getElementById('refImageInput').value : '';
+        var refTitle = document.getElementById('refTitleInput') ? document.getElementById('refTitleInput').value : '';
+        var refCategory = document.getElementById('refCategoryInput') ? document.getElementById('refCategoryInput').value : '';
+
+        var resultArea = document.getElementById('aiResultArea');
+        if (resultArea) {
+            resultArea.style.background = 'var(--bg-input)';
+            resultArea.style.border = '2px dashed var(--border)';
+            resultArea.style.padding = '40px';
+            resultArea.innerHTML =
+                '<div style="display:flex;flex-direction:column;align-items:center;gap:16px;">' +
+                '<div class="ai-spinner"></div>' +
+                '<h4 style="font-size:1rem;font-weight:600;color:var(--text-secondary);">Generating with OpenAI...</h4>' +
+                '<p style="font-size:0.8rem;color:var(--text-muted);">Please wait while AI creates your masterpiece</p></div>';
+        }
+
+        var csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        var csrfToken = csrfInput ? csrfInput.value : '';
+
+        fetch("{% url 'user_dashboard:ai_generate' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                prompt: promptInput.value.trim(),
+                aspect_ratio: aspectRatio,
+                style: style,
+                color_theme: colorTheme,
+                ref_image: refImage,
+                ref_title: refTitle,
+                ref_category: refCategory
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (resultArea) {
+                    resultArea.style.background = 'transparent';
+                    resultArea.style.border = 'none';
+                    resultArea.style.padding = '0';
+                    resultArea.innerHTML =
+                        '<img id="previewAiImage" src="' + data.image_url + '" alt="Generated Poster" style="width:100%;border-radius:var(--radius-md);margin-bottom:16px;">' +
+                        '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">' +
+                        '<button class="btn btn-primary btn-sm" onclick="downloadGeneratedPoster()">' +
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download</button>' +
+                        '<button class="btn btn-secondary btn-sm" onclick="saveGeneratedPoster()">' +
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> Save</button>' +
+                        '<button class="btn btn-accent btn-sm" onclick="generateAiPoster()">Regenerate</button>' +
+                        '</div>';
+                }
+                if (data.credits_available !== undefined) {
+                    var credEl = document.getElementById('creditsDisplay');
+                    if (credEl) {
+                        credEl.textContent = data.credits_available;
+                        if (data.credits_available <= 0) {
+                            credEl.style.color = '#ef4444';
+                            var genBtn = document.getElementById('generatePosterBtn');
+                            if (genBtn) genBtn.disabled = true;
+                        } else {
+                            credEl.style.color = '#10b981';
+                        }
+                    }
+                }
+                showToast(data.message || 'Poster generated with OpenAI!');
+            } else {
+                if (resultArea) {
+                    resultArea.style.background = 'transparent';
+                    resultArea.style.border = '1px solid var(--border)';
+                    resultArea.style.padding = '30px';
+                    resultArea.innerHTML =
+                        '<div style="text-align:center;">' +
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:36px;height:36px;margin-bottom:12px;display:inline-block;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+                        '<h4 style="font-size:1.1rem;margin-bottom:8px;color:var(--text-primary);">Generation Failed</h4>' +
+                        '<p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:16px;">' + (data.message || 'Error generating the OpenAI image.') + '</p>' +
+                        '<button class="btn btn-secondary btn-sm" onclick="generateAiPoster()">Try Again</button>' +
+                        '</div>';
+                }
+                showToast(data.message || 'Error generating poster.');
+            }
+        })
+        .catch(err => {
+            console.error('AI Generation Error:', err);
+            if (resultArea) {
+                resultArea.style.background = 'transparent';
+                resultArea.style.border = '1px solid var(--border)';
+                resultArea.style.padding = '30px';
+                resultArea.innerHTML =
+                    '<div style="text-align:center;">' +
+                    '<h4 style="color:#ef4444;margin-bottom:8px;">Connection Error</h4>' +
+                    '<p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:16px;">Could not connect to the server or OpenAI.</p>' +
+                    '<button class="btn btn-secondary btn-sm" onclick="generateAiPoster()">Try Again</button>' +
+                    '</div>';
+            }
+            showToast('Connection failed.');
+        });
+    }
+
+    function simulateGeneration() {
+        generateAiPoster();
+    }
+
+    function saveGeneratedPoster(isDownload) {
+        var imgEl = document.querySelector('#aiResultArea img');
+        if (!imgEl) return;
+        var imageUrl = imgEl.src;
+        var csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        var csrfToken = csrfInput ? csrfInput.value : '';
+
+        fetch("{% url 'user_dashboard:design_save_ai' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            },
+            body: JSON.stringify({ image_url: imageUrl })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (isDownload && data.download_url) {
+                    window.location.href = data.download_url;
+                    showToast("Poster downloaded & saved to My Designs!");
+                } else {
+                    showToast("Design saved to My Designs!");
+                }
+            } else {
+                if (isDownload) {
+                    fallbackDownload(imageUrl);
+                } else {
+                    showToast(data.message || "Please login to save designs.");
+                }
+            }
+        })
+        .catch(err => {
+            console.error("Error saving design:", err);
+            if (isDownload) {
+                fallbackDownload(imageUrl);
+            } else {
+                showToast("Failed to connect. Please check if you are logged in.");
+            }
+        });
+    }
+
+    function fallbackDownload(imageUrl) {
+        var a = document.createElement('a');
+        a.href = imageUrl;
+        a.download = 'ai_poster.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast("Poster downloaded!");
+    }
+
+    function downloadGeneratedPoster() {
+        saveGeneratedPoster(true);
+    }
+</script>
+{% endblock %}

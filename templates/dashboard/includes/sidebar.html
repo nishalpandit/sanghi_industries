@@ -1,0 +1,142 @@
+{% load static %}
+<aside class="sidebar" id="sidebar" role="navigation" aria-label="Main Navigation">
+  <div class="sidebar-brand">
+    <div class="brand-text" style="text-align: center; width: 100%;">
+      <h4 style="font-size: 1.8rem; letter-spacing: 0.05em; color: #fff; margin-bottom: 4px; font-weight: 700;">SANGHI
+      </h4>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <div style="height: 1px; background: #94a3b8; flex: 1;"></div>
+        <span style="font-size: 0.6rem; color: #94a3b8; letter-spacing: 0.15em;">INDUSTRIES</span>
+        <div style="height: 1px; background: #94a3b8; flex: 1;"></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <!-- Main -->
+    <div class="nav-label">Main</div>
+    <div class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" data-page="dashboard"
+        href="{% url 'dashboard' %}">
+        <i class="fas fa-th-large"></i><span class="nav-text">Dashboard</span>
+      </a>
+    </div>
+
+    <!-- Master Data Group -->
+    <div class="nav-label">Master Data</div>
+    <div
+      class="nav-group {% if request.resolver_match.url_name in 'masterBusiness,masterCategory,masterTemplateCategory,masterTemplateSubcategory,masterCity' %}open{% endif %}">
+      <button class="nav-group-toggle">
+        <i class="fas fa-database nav-icon"></i>
+        <span class="nav-text">Masters</span>
+        <i class="fas fa-chevron-right nav-arrow"></i>
+      </button>
+      <div class="nav-group-items">
+        <a class="nav-link {% if request.resolver_match.url_name == 'masterBusiness' %}active{% endif %}"
+          data-page="masterBusiness" href="{% url 'masterBusiness' %}">
+          <i class="fas fa-briefcase"></i><span class="nav-text">Business Types</span>
+        </a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'masterCategory' %}active{% endif %}"
+          data-page="masterCategory" href="{% url 'masterCategory' %}">
+          <i class="fas fa-tags"></i><span class="nav-text">Business Categories</span>
+        </a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'masterTemplateCategory' %}active{% endif %}"
+          data-page="masterTemplateCategory" href="{% url 'masterTemplateCategory' %}">
+          <i class="fas fa-list-alt"></i><span class="nav-text">Categories</span>
+        </a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'masterTemplateSubcategory' %}active{% endif %}"
+          data-page="masterTemplateSubcategory" href="{% url 'masterTemplateSubcategory' %}">
+          <i class="fas fa-sitemap"></i><span class="nav-text">Subcategories</span>
+        </a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'masterCity' %}active{% endif %}"
+          data-page="masterCity" href="{% url 'masterCity' %}">
+          <i class="fas fa-map-marker-alt"></i><span class="nav-text">Cities</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Management Group -->
+    <div class="nav-label">Management</div>
+    <div class="nav-group {% if request.resolver_match.url_name in 'users,brand_kits,templates,category_templates,trending_templates,flex_designs,ai_generated_users,ai_generated_user_posters' %}open{% endif %}">
+      <button class="nav-group-toggle">
+        <i class="fas fa-layer-group nav-icon"></i>
+        <span class="nav-text">Content</span>
+        <i class="fas fa-chevron-right nav-arrow"></i>
+      </button>
+      <div class="nav-group-items">
+        <a class="nav-link {% if request.resolver_match.url_name == 'users' %}active{% endif %}" data-page="users"
+          href="{% url 'users' %}">
+          <i class="fas fa-users"></i><span class="nav-text">Users</span>
+        </a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'brand_kits' %}active{% endif %}" data-page="brand_kits"
+          href="{% url 'brand_kits' %}">
+          <i class="fas fa-swatchbook"></i><span class="nav-text">Brand Kits</span>
+        </a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'templates' or request.resolver_match.url_name == 'category_templates' %}active{% endif %}"
+          data-page="templates" href="{% url 'templates' %}">
+          <i class="fas fa-palette"></i><span class="nav-text">Categories</span>
+        </a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'trending_templates' %}active{% endif %}"
+          data-page="trending_templates" href="{% url 'trending_templates' %}">
+          <i class="fas fa-fire"></i><span class="nav-text">Trending Templates</span>
+        </a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'flex_designs' %}active{% endif %}"
+          data-page="flex_designs" href="{% url 'flex_designs' %}">
+          <i class="fas fa-paint-brush"></i><span class="nav-text">Flex Designs</span>
+        </a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'ai_generated_users' or request.resolver_match.url_name == 'ai_generated_user_posters' %}active{% endif %}"
+          data-page="ai_generated_users" href="{% url 'ai_generated_users' %}">
+          <i class="fas fa-images"></i><span class="nav-text">AI Generated</span>
+        </a>
+      </div>
+    </div>
+    <!-- Revenue Group -->
+    <div class="nav-label">Revenue</div>
+    <div class="nav-group {% if request.resolver_match.url_name in 'subscriptions,payments' %}open{% endif %}">
+      <button class="nav-group-toggle">
+        <i class="fas fa-chart-pie nav-icon"></i>
+        <span class="nav-text">Finance & Billing</span>
+        <i class="fas fa-chevron-right nav-arrow"></i>
+      </button>
+      <div class="nav-group-items">
+        <a class="nav-link {% if request.resolver_match.url_name == 'subscriptions' %}active{% endif %}"
+          data-page="subscriptions" href="{% url 'subscriptions' %}">
+          <i class="fas fa-credit-card"></i><span class="nav-text">Subscriptions</span>
+        </a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'payments' %}active{% endif %}"
+          data-page="payments" href="{% url 'payments' %}">
+          <i class="fas fa-money-bill-wave"></i><span class="nav-text">Payments</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- System Group -->
+    <div class="nav-label">System</div>
+    <div class="nav-group {% if request.resolver_match.url_name in 'notifications,feedback' %}open{% endif %}">
+      <button class="nav-group-toggle">
+        <i class="fas fa-cogs nav-icon"></i>
+        <span class="nav-text">System</span>
+        <i class="fas fa-chevron-right nav-arrow"></i>
+      </button>
+      <div class="nav-group-items">
+        <a class="nav-link {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}"
+          data-page="notifications" href="{% url 'notifications' %}">
+          <i class="fas fa-bell"></i><span class="nav-text">Notifications</span>
+          <span class="nav-badge">5</span>
+        </a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'feedback' %}active{% endif %}"
+          data-page="feedback" href="{% url 'feedback' %}">
+          <i class="fas fa-comments"></i><span class="nav-text">Feedback</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-footer-avatar">N</div>
+    <div class="sidebar-footer-info">
+      <h6>NIHAL</h6>
+      <span>Super Admin</span>
+    </div>
+  </div>
+</aside>
