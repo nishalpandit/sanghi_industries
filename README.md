@@ -22,8 +22,8 @@ A Django web application for creating and downloading customized business market
 ## Setup Instructions
 
 1. Clone the repository:
-   git clone https://github.com/nishalpandit/sanghi.git
-   cd sanghi
+   git clone https://github.com/nishalpandit/sanghi_industries.git
+   cd sanghi_industries
 
 2. Create and activate a virtual environment:
    python -m venv env
