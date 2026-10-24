@@ -8,6 +8,7 @@ from django.test import TestCase, override_settings
 
 from users.models import GeneratedPoster, Profile
 from .openai_images import OpenAIImageError, generate_openai_image
+from .views import OPENAI_IMAGE_SIZES, resolve_openai_image_size
 
 
 @override_settings(
@@ -27,14 +28,14 @@ class OpenAIImageClientTests(TestCase):
 
         result = generate_openai_image(
             prompt="A polished festival poster",
-            size="576x1024",
+            size="864x1536",
             safety_identifier="hashed-user-id",
         )
 
         self.assertEqual(result, expected_image)
         _, kwargs = mock_post.call_args
         self.assertEqual(kwargs["json"]["model"], "gpt-image-2.5-sunburst")
-        self.assertEqual(kwargs["json"]["size"], "576x1024")
+        self.assertEqual(kwargs["json"]["size"], "864x1536")
         self.assertEqual(kwargs["json"]["quality"], "high")
         self.assertEqual(kwargs["json"]["output_format"], "png")
         self.assertEqual(kwargs["json"]["safety_identifier"], "hashed-user-id")
@@ -68,8 +69,23 @@ class AIGenerationViewTests(TestCase):
         response = self.client.get("/user-dashboard/ai-generation/")
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "AI Poster Generator")
+        self.assertContains(response, "Create your poster")
         self.assertContains(response, "Generating with OpenAI...")
+        self.assertContains(response, "Choose a canvas")
+        self.assertContains(response, "864 × 1536 px")
+        self.assertNotContains(response, 'id="styleInput"')
+
+    def test_all_ratio_presets_meet_openai_size_constraints(self):
+        for aspect_ratio, size in OPENAI_IMAGE_SIZES.items():
+            with self.subTest(aspect_ratio=aspect_ratio):
+                width, height = (int(value) for value in size.split("x"))
+                self.assertEqual(width % 16, 0)
+                self.assertEqual(height % 16, 0)
+                self.assertGreaterEqual(width * height, 655_360)
+                self.assertGreaterEqual(width / height, 1 / 3)
+                self.assertLessEqual(width / height, 3)
+
+        self.assertEqual(resolve_openai_image_size("unknown"), "1024x1024")
 
     @patch("user_dashboard.views.generate_openai_image", return_value=b"png-bytes")
     def test_success_saves_image_and_deducts_one_credit(self, mock_generate):
@@ -78,7 +94,6 @@ class AIGenerationViewTests(TestCase):
             data=json.dumps({
                 "prompt": "A modern Diwali sale poster",
                 "aspect_ratio": "9:16",
-                "style": "Photorealistic",
                 "color_theme": "#663399",
             }),
             content_type="application/json",
@@ -91,8 +106,8 @@ class AIGenerationViewTests(TestCase):
         self.assertEqual(GeneratedPoster.objects.filter(profile=self.profile).count(), 1)
         self.subscription.refresh_from_db()
         self.assertEqual(self.subscription.credits_available, 1)
-        self.assertEqual(mock_generate.call_args.kwargs["size"], "576x1024")
-        self.assertIn("poster art design", mock_generate.call_args.kwargs["prompt"])
+        self.assertEqual(mock_generate.call_args.kwargs["size"], "864x1536")
+        self.assertIn("polished poster design", mock_generate.call_args.kwargs["prompt"])
 
         download = self.client.get(payload["download_url"])
         self.assertEqual(download.status_code, 200)

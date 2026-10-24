@@ -30,6 +30,21 @@ from django.utils import timezone
 import datetime
 
 
+OPENAI_IMAGE_SIZES = {
+    "1:1": "1024x1024",
+    "9:16": "864x1536",
+    "16:9": "1536x864",
+    "4:5": "896x1120",
+    "3:4": "768x1024",
+    "A4": "832x1184",
+}
+
+
+def resolve_openai_image_size(aspect_ratio):
+    """Return a validated GPT Image size for a UI aspect-ratio preset."""
+    return OPENAI_IMAGE_SIZES.get(aspect_ratio, OPENAI_IMAGE_SIZES["1:1"])
+
+
 def check_active_subscription(user):
     """Check if the user has an active subscription plan."""
     if not user or not user.is_authenticated:
@@ -400,7 +415,6 @@ def ai_generate(request):
 
     prompt = (data.get("prompt") or "").strip()
     aspect_ratio = data.get("aspect_ratio", "9:16")
-    style = data.get("style", "Photorealistic")
     color_theme = data.get("color_theme", "purple")
     ref_image = data.get("ref_image", "").strip()
     ref_title = data.get("ref_title", "").strip()
@@ -431,20 +445,8 @@ def ai_generate(request):
     if ref_desc:
         ref_desc = ref_desc.strip(", ") + ", "
 
-    full_prompt = f"{ref_desc}{prompt}, poster art design, {style} style, {colors_desc}, professional typography layout, graphic design masterpiece, UHD"
-
-    # GPT Image 2.5 supports custom dimensions divisible by 16 within a 1:3 to 3:1 ratio.
-    width, height = 1024, 1024
-    if aspect_ratio == "9:16":
-        width, height = 576, 1024
-    elif aspect_ratio == "16:9":
-        width, height = 1024, 576
-    elif aspect_ratio == "4:5":
-        width, height = 832, 1024
-    elif aspect_ratio == "3:4":
-        width, height = 768, 1024
-    elif aspect_ratio == "A4":
-        width, height = 704, 1024
+    full_prompt = f"{ref_desc}{prompt}, polished poster design, {colors_desc}, professional typography and balanced composition, production-ready, high detail"
+    image_size = resolve_openai_image_size(aspect_ratio)
 
     if len(full_prompt) > 32000:
         return JsonResponse({
@@ -459,7 +461,7 @@ def ai_generate(request):
     try:
         img_bytes = generate_openai_image(
             prompt=full_prompt,
-            size=f"{width}x{height}",
+            size=image_size,
             safety_identifier=safety_identifier,
         )
 
