@@ -41,6 +41,16 @@ class OpenAIImageClientTests(TestCase):
         self.assertEqual(kwargs["json"]["safety_identifier"], "hashed-user-id")
         self.assertEqual(kwargs["headers"]["Authorization"], "Bearer test-key")
 
+    @patch("user_dashboard.openai_images.requests.post")
+    def test_reference_uses_edit_endpoint_with_real_image(self, mock_post):
+        mock_post.return_value = Mock(status_code=200)
+        mock_post.return_value.json.return_value = {"data": [{"b64_json": base64.b64encode(b"png").decode()}]}
+        generate_openai_image("same face", "1024x1024", reference_image="data:image/jpeg;base64,YQ==")
+        args, kwargs = mock_post.call_args
+        self.assertEqual(args[0], "https://api.openai.com/v1/images/edits")
+        self.assertEqual(kwargs["json"]["images"], [{"image_url": "data:image/jpeg;base64,YQ=="}])
+        self.assertNotIn("input_fidelity", kwargs["json"])
+
 
 @override_settings(
     OPENAI_API_KEY="test-key",
@@ -72,8 +82,75 @@ class AIGenerationViewTests(TestCase):
         self.assertContains(response, "Create your poster")
         self.assertContains(response, "Generating with OpenAI...")
         self.assertContains(response, "Choose a canvas")
+        self.assertContains(response, 'name="reference_images" multiple')
+        self.assertNotContains(response, "For best face consistency")
+        self.assertNotContains(response, "Add a clear face photo")
         self.assertContains(response, "864 × 1536 px")
         self.assertNotContains(response, 'id="styleInput"')
+
+    @patch("user_dashboard.views.generate_openai_image", return_value=b"png-bytes")
+    def test_multipart_reference_is_forwarded_and_poster_saved(self, mock_generate):
+        import io
+        from PIL import Image
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        output = io.BytesIO()
+        Image.new("RGB", (48, 64), "red").save(output, format="PNG")
+        response = self.client.post("/user-dashboard/ai-generation/generate/", {
+            "prompt": "my pic diwali poster gold happy diwali",
+            "reference_image": SimpleUploadedFile("face.png", output.getvalue(), content_type="image/png"),
+        })
+        self.assertEqual(response.status_code, 200)
+        kwargs = mock_generate.call_args.kwargs
+        self.assertTrue(kwargs["reference_images"][0].startswith("data:image/jpeg;base64,"))
+        self.assertIn("preserve that specific person's identity", kwargs["prompt"])
+        self.assertIn("rough wording", kwargs["prompt"])
+        self.assertIn("my pic diwali poster gold happy diwali", kwargs["prompt"])
+        self.assertEqual(GeneratedPoster.objects.filter(profile=self.profile).count(), 1)
+        self.subscription.refresh_from_db()
+        self.assertEqual(self.subscription.credits_available, 1)
+
+    @patch("user_dashboard.views.generate_openai_image", return_value=b"png-bytes")
+    def test_multiple_references_keep_upload_order(self, mock_generate):
+        import io
+        from PIL import Image
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        files = []
+        for color in ["red", "blue"]:
+            output = io.BytesIO()
+            Image.new("RGB", (48, 64), color).save(output, format="PNG")
+            files.append(SimpleUploadedFile(color + ".png", output.getvalue(), content_type="image/png"))
+        response = self.client.post("/user-dashboard/ai-generation/generate/", {
+            "prompt": "use image 1 person and image 2 background", "reference_images": files,
+        })
+        self.assertEqual(response.status_code, 200)
+        refs = mock_generate.call_args.kwargs["reference_images"]
+        self.assertEqual(len(refs), 2)
+        self.assertNotEqual(refs[0], refs[1])
+        self.assertIn("never blend their faces", mock_generate.call_args.kwargs["prompt"])
+
+    @patch("user_dashboard.views.generate_openai_image")
+    def test_too_many_references_rejected_without_provider_call(self, mock_generate):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        files = [SimpleUploadedFile(str(i) + ".png", b"image") for i in range(9)]
+        response = self.client.post("/user-dashboard/ai-generation/generate/", {
+            "prompt": "poster", "reference_images": files,
+        })
+        self.assertEqual(response.status_code, 400)
+        mock_generate.assert_not_called()
+        self.subscription.refresh_from_db()
+        self.assertEqual(self.subscription.credits_available, 2)
+
+    @patch("user_dashboard.views.generate_openai_image")
+    def test_invalid_reference_rejected_without_charge(self, mock_generate):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        response = self.client.post("/user-dashboard/ai-generation/generate/", {
+            "prompt": "my poster",
+            "reference_image": SimpleUploadedFile("fake.png", b"not an image", content_type="image/png"),
+        })
+        self.assertEqual(response.status_code, 400)
+        mock_generate.assert_not_called()
+        self.subscription.refresh_from_db()
+        self.assertEqual(self.subscription.credits_available, 2)
 
     def test_all_ratio_presets_meet_openai_size_constraints(self):
         for aspect_ratio, size in OPENAI_IMAGE_SIZES.items():

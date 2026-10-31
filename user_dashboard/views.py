@@ -1,3 +1,7 @@
+import base64
+import io
+import warnings
+from PIL import Image, ImageOps, UnidentifiedImageError
 import re
 import random
 import os
@@ -408,10 +412,39 @@ def ai_generate(request):
     if not request.method == "POST":
         return JsonResponse({"success": False, "message": "POST request required."}, status=405)
 
-    try:
-        data = json.loads(request.body)
-    except Exception:
+    if request.content_type == "application/json":
+        try:
+            data = json.loads(request.body)
+            if not isinstance(data, dict):
+                raise ValueError()
+        except (ValueError, UnicodeDecodeError):
+            return JsonResponse({"success": False, "message": "Invalid JSON request."}, status=400)
+    else:
         data = request.POST
+
+    reference_images = []
+    uploads = request.FILES.getlist("reference_images") + request.FILES.getlist("reference_image")
+    if len(uploads) > 8:
+        return JsonResponse({"success": False, "message": "Attach up to 8 reference images."}, status=400)
+    if sum(upload.size for upload in uploads) > 30 * 1024 * 1024:
+        return JsonResponse({"success": False, "message": "Attachments must total 30 MB or less."}, status=400)
+    for upload in uploads:
+        if upload.size > 10 * 1024 * 1024:
+            return JsonResponse({"success": False, "message": "Reference image must be 10 MB or smaller."}, status=400)
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", Image.DecompressionBombWarning)
+                with Image.open(upload) as image:
+                    if image.format not in {"JPEG", "PNG", "WEBP"} or image.width * image.height > 25_000_000:
+                        raise ValueError()
+                    image.load()
+                    image = ImageOps.exif_transpose(image).convert("RGB")
+                    image.thumbnail((2048, 2048))
+                    output = io.BytesIO()
+                    image.save(output, format="JPEG", quality=95)
+            reference_images.append("data:image/jpeg;base64," + base64.b64encode(output.getvalue()).decode("ascii"))
+        except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError, Image.DecompressionBombWarning):
+            return JsonResponse({"success": False, "message": "Attach a valid JPG, PNG or WebP image up to 25 megapixels."}, status=400)
 
     prompt = (data.get("prompt") or "").strip()
     aspect_ratio = data.get("aspect_ratio", "9:16")
@@ -438,14 +471,65 @@ def ai_generate(request):
             "message": f"AI Generation Blocked: You have 0 AI generation credits remaining on your {plan_title} plan (1 credit = 1 image). Please upgrade your plan or renew to acquire more credits!"
         }, status=403)
 
-    colors_desc = f"featuring custom RGB color palette ({color_theme})" if color_theme else "vibrant harmonious colors"
+    colors_desc = f"featuring custom RGB color palette ({color_theme})" if color_theme else "a restrained palette chosen for the occasion: one dominant neutral, one supporting color and one accent"
     ref_desc = f"inspired by professional reference layout of {ref_title}" if ref_title else ""
     if ref_category and ref_category.lower() not in ref_desc.lower():
         ref_desc = f"in {ref_category} style, " + ref_desc
     if ref_desc:
         ref_desc = ref_desc.strip(", ") + ", "
 
-    full_prompt = f"{ref_desc}{prompt}, polished poster design, {colors_desc}, professional typography and balanced composition, production-ready, high detail"
+    full_prompt = (
+        "Act as an expert poster art director. Turn the user's brief, including rough wording, "
+        "typos, mixed languages or incomplete sentences, into a polished poster design. "
+        "Before rendering, silently resolve the occasion, audience, one main message and one coherent "
+        "visual concept. Produce a finished commissioned design, with the restraint and craft of an "
+        "experienced graphic designer. Avoid a generic greeting-card collage. "
+        "ART DIRECTION: Use one strong focal point and a deliberate grid. Establish a clear hierarchy: "
+        "one dominant headline, one supporting text level and small details only when supplied. "
+        "Reserve generous negative space and consistent outer margins of roughly 6 percent. "
+        "Keep heads, faces, logos and essential text safely inside the canvas. Place typography in "
+        "a quiet, uncluttered region with strong contrast; never across faces. Use at most two "
+        "complementary typefaces with careful kerning, line spacing and aligned text blocks. "
+        "Prefer refined display type and a clean supporting sans serif; avoid mixing multiple "
+        "handwritten fonts, random tilted captions, stickers, doodles, clip art and excessive effects. "
+        "Use decoration sparingly and only when it strengthens the requested concept. Do not fill "
+        "empty space with balloons, confetti, hearts, sparkles or extra props by default. "
+        "PHOTO TREATMENT: Preserve natural facial detail and believable skin texture. Use coherent "
+        "lighting, realistic proportions, clean edges and consistent color grading. Integrate photos "
+        "into a considered composition rather than a crowded cut-and-paste collage. Keep groups "
+        "together when appropriate; do not add people or duplicate subjects. For birthdays, default "
+        "to a tasteful portrait-led celebration with one elegant greeting and a subtle accent, unless "
+        "the brief explicitly asks for a playful or maximalist treatment. Professional means purposeful "
+        "and appropriate to the brief, not always luxury, black-and-gold, or minimalism. "
+        "Understand the intended occasion, subject, mood and message. Infer tasteful layout, "
+        "lighting, background and typography where unspecified. Explicit user instructions take "
+        "priority over default styling. Preserve supplied names, numbers, dates, offers and quoted "
+        "poster text exactly and in their original language. Do not invent contact details, prices, "
+        "claims or extra slogans. Render only intended poster copy, never these instructions. "
+        f"Use balanced composition and legible professional typography. Default palette: {colors_desc}. "
+        "FINAL DESIGN CHECK: Before finishing, simplify competing elements, remove unsolicited copy, "
+        "check spelling and supplied details, keep the headline readable at thumbnail size, and ensure "
+        "clean alignment, safe margins, consistent shadows and no awkward crops or facial distortions. "
+        "Deliver only the finished edge-to-edge poster, without a mockup, frame or presentation board. "
+        f"Optional layout context: {ref_desc}. User brief:\n{prompt}"
+    )
+    if reference_images:
+        full_prompt += (
+            f"\nREFERENCE IMAGES: {len(reference_images)} images are attached, numbered in upload order. "
+            "Read the brief first and assign each reference its intended role: person, product, logo, "
+            "background or layout. Follow explicit references such as 'image 1' or 'second photo'. "
+            "Multiple photos of the same person show one identity from different views: combine their "
+            "identity evidence without averaging faces. Different people must remain distinct individuals; "
+            "never blend their faces or transfer features between them. When roles are unspecified, use "
+            "the first image as the primary subject and the others only where relevant to the brief. "
+            "Use layout references for composition without copying unrelated faces or text. "
+            "If it contains a person, preserve that specific person's identity as the highest priority: "
+            "same facial structure, eyes, nose, lips, jawline, skin tone, age, hairline and distinctive "
+            "features. Keep the original face and expression wherever possible; do not beautify, "
+            "reshape, replace or invent a similar-looking face. Build the requested poster around "
+            "the reference person. Change clothing, pose or surroundings only as requested, while "
+            "preserving facial identity. If it is a product or logo, preserve its recognizable details."
+        )
     image_size = resolve_openai_image_size(aspect_ratio)
 
     if len(full_prompt) > 32000:
@@ -463,6 +547,7 @@ def ai_generate(request):
             prompt=full_prompt,
             size=image_size,
             safety_identifier=safety_identifier,
+            **({"reference_images": reference_images} if reference_images else {}),
         )
 
         filename = f"openai_poster_{uuid.uuid4().hex[:8]}.png"
@@ -475,9 +560,10 @@ def ai_generate(request):
         sub.save(update_fields=['credits_available', 'updated_at'])
         remaining_credits = sub.credits_available if sub else 0
 
+        model_name = getattr(settings, 'OPENAI_IMAGE_MODEL', 'gpt-image-2.5-sunburst')
         return JsonResponse({
             "success": True,
-            "message": f"Poster generated with OpenAI {settings.OPENAI_IMAGE_MODEL}! (1 credit deducted, {remaining_credits} remaining)",
+            "message": f"Poster generated with OpenAI {model_name}! (1 credit deducted, {remaining_credits} remaining)",
             "image_url": image_url,
             "download_url": download_url,
             "poster_id": poster.id,

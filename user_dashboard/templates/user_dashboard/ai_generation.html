@@ -116,11 +116,17 @@
                     <!-- Prompt -->
                     <div class="form-group">
                         <label class="form-label form-label-row" for="prompt">
-                            <span class="form-label-copy">Describe your poster <small>Be specific about the text, subject, and mood.</small></span>
+                            <span class="form-label-copy">Describe your poster <small>Describe your idea in your own words ? even a rough description works.</small></span>
                             <span class="prompt-counter" id="promptCounter">0 / 30,000</span>
                         </label>
                         <textarea class="form-textarea" id="prompt" name="prompt" required
                                   maxlength="30000" placeholder="Example: Create a premium Diwali sale poster with elegant gold typography, glowing diyas, and a deep plum background...">{{ form.prompt.value|default:'' }}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="referenceImage">Attach your images <small>Optional</small></label>
+                        <input type="file" id="referenceImage" name="reference_images" multiple accept="image/jpeg,image/png,image/webp" class="form-control">
+                        <div id="uploadPreview" hidden style="margin-top:12px; display:none; flex-wrap:wrap; gap:12px;"></div>
                     </div>
 
                     <!-- Aspect Ratio -->
@@ -209,7 +215,7 @@
                         <div class="ai-gen-result-area" id="aiResultArea">
                             {% if generated_poster %}
                                 <img class="generated-poster-image" src="{{ generated_poster.image.url }}" alt="Generated Poster">
-                                <div class="generated-actions"><a href="{{ generated_poster.image.url }}" download class="btn btn-primary btn-sm">Download</a></div>
+
                             {% else %}
                                 <div class="preview-placeholder-art" aria-hidden="true">
                                     <span class="preview-orbit orbit-one"></span><span class="preview-orbit orbit-two"></span>
@@ -219,6 +225,9 @@
                             {% endif %}
                         </div>
                     </div>
+                </div>
+                <div class="generated-actions" id="generatedActions"{% if not generated_poster %} hidden{% endif %}>
+                    {% if generated_poster %}<a href="{{ generated_poster.image.url }}" download class="btn btn-primary btn-sm">Download</a>{% endif %}
                 </div>
                 <div class="preview-footer">
                     <span><small>Canvas</small><strong id="previewCanvasName">Story · 9:16</strong></span>
@@ -278,6 +287,62 @@
             return !best || distance < best.distance ? { button: button, distance: distance } : best;
         }, null);
         if (closest) selectAspectRatio(closest.button);
+    }
+
+    var referenceAttachments = [];
+    function initReferenceUpload() {
+        var input = document.getElementById('referenceImage');
+        var preview = document.getElementById('uploadPreview');
+        function render() {
+            preview.replaceChildren();
+            preview.hidden = referenceAttachments.length === 0;
+            preview.style.display = referenceAttachments.length ? 'flex' : 'none';
+            referenceAttachments.forEach(function (entry, index) {
+                var card = document.createElement('div');
+                card.style.cssText = 'width:120px;padding:8px;border:1px solid var(--border);border-radius:10px;';
+                var image = document.createElement('img');
+                image.src = entry.url;
+                image.alt = 'Reference image ' + (index + 1);
+                image.style.cssText = 'width:100%;height:80px;object-fit:contain;border-radius:6px;';
+                var name = document.createElement('div');
+                name.textContent = (index + 1) + '. ' + entry.file.name;
+                name.style.cssText = 'font-size:12px;overflow-wrap:anywhere;margin:6px 0;';
+                var remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'btn btn-secondary btn-sm';
+                remove.textContent = 'Remove';
+                remove.setAttribute('aria-label', 'Remove ' + entry.file.name);
+                remove.addEventListener('click', function () {
+                    URL.revokeObjectURL(entry.url);
+                    referenceAttachments.splice(index, 1);
+                    render();
+                });
+                card.append(image, name, remove);
+                preview.appendChild(card);
+            });
+        }
+        input.addEventListener('change', function () {
+            var files = Array.from(input.files);
+            input.value = '';
+            if (referenceAttachments.length + files.length > 8) {
+                showToast('Attach up to 8 reference images.'); return;
+            }
+            var total = referenceAttachments.reduce(function (sum, entry) { return sum + entry.file.size; }, 0);
+            for (var file of files) {
+                if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 10 * 1024 * 1024) {
+                    showToast('Choose JPG, PNG or WebP images up to 10 MB each.'); return;
+                }
+                total += file.size;
+            }
+            if (total > 30 * 1024 * 1024) { showToast('Attachments must total 30 MB or less.'); return; }
+            files.forEach(function (file) {
+                referenceAttachments.push({ file: file, url: URL.createObjectURL(file) });
+            });
+            render();
+        });
+        window.addEventListener('beforeunload', function () {
+            referenceAttachments.forEach(function (entry) { URL.revokeObjectURL(entry.url); });
+        });
     }
 
     function initPromptCounter() {
@@ -439,6 +504,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         initAspectRatioControls();
         initPromptCounter();
+        initReferenceUpload();
         renderRgbPalette();
         initReferenceTemplate();
         initAddRgbListener();
@@ -479,6 +545,7 @@
         var resultArea = document.getElementById('aiResultArea');
         var generateButton = document.getElementById('generatePosterBtn');
         if (generateButton) generateButton.disabled = true;
+        document.getElementById('generatedActions').hidden = true;
         if (resultArea) {
             resultArea.className = 'ai-gen-result-area is-loading';
             resultArea.innerHTML =
@@ -491,20 +558,20 @@
         var csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
         var csrfToken = csrfInput ? csrfInput.value : '';
 
+        var formData = new FormData();
+        formData.append('prompt', promptInput.value.trim());
+        formData.append('aspect_ratio', aspectRatio);
+        formData.append('color_theme', colorTheme);
+        formData.append('ref_image', refImage);
+        formData.append('ref_title', refTitle);
+        formData.append('ref_category', refCategory);
+        referenceAttachments.forEach(function (entry) {
+            formData.append('reference_images', entry.file);
+        });
         fetch("{% url 'user_dashboard:ai_generate' %}", {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify({
-                prompt: promptInput.value.trim(),
-                aspect_ratio: aspectRatio,
-                color_theme: colorTheme,
-                ref_image: refImage,
-                ref_title: refTitle,
-                ref_category: refCategory
-            })
+            headers: { 'X-CSRFToken': csrfToken },
+            body: formData
         })
         .then(response => response.json())
         .then(data => {
@@ -513,11 +580,13 @@
                     currentDownloadUrl = data.download_url || '';
                     resultArea.className = 'ai-gen-result-area has-image';
                     resultArea.innerHTML =
-                        '<img id="previewAiImage" class="generated-poster-image" src="' + encodeURI(data.image_url) + '" alt="Generated poster">' +
-                        '<div class="generated-actions">' +
+                        '<img id="previewAiImage" class="generated-poster-image" src="' + encodeURI(data.image_url) + '" alt="Generated poster">';
+                    var actions = document.getElementById('generatedActions');
+                    actions.hidden = false;
+                    actions.innerHTML =
                         '<button type="button" class="btn btn-primary btn-sm" onclick="downloadGeneratedPoster()">Download</button>' +
                         '<button type="button" class="btn btn-secondary btn-sm" onclick="generateAiPoster()">Regenerate</button>' +
-                        '</div>';
+                        '';
                 }
                 if (data.credits_available !== undefined) {
                     var credEl = document.getElementById('creditsDisplay');

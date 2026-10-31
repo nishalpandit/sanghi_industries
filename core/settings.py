@@ -1,10 +1,24 @@
 import os
 from pathlib import Path
 from datetime import timedelta
-from dotenv import load_dotenv
-
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR / '.env')
+
+# Load environment variables (.env) safely even if python-dotenv is not installed
+try:
+    from dotenv import load_dotenv
+    load_dotenv(BASE_DIR / '.env', override=True)
+except ImportError:
+    env_file = BASE_DIR / '.env'
+    if env_file.exists():
+        try:
+            with open(env_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#') and '=' in line:
+                        k, v = line.split('=', 1)
+                        os.environ[k.strip()] = v.strip().strip("'\"")
+        except Exception:
+            pass
 
 
 # Quick-start development settings - unsuitable for production

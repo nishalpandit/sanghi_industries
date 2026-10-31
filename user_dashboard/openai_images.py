@@ -1,6 +1,7 @@
 """OpenAI Images API integration for poster generation."""
 
 import base64
+import os
 
 import requests
 from django.conf import settings
@@ -17,19 +18,23 @@ class OpenAIImageConfigurationError(OpenAIImageError):
     """Raised when the OpenAI image integration is not configured."""
 
 
-def generate_openai_image(prompt, size, safety_identifier=None):
+def generate_openai_image(prompt, size, safety_identifier=None, reference_image=None, reference_images=None):
     """Generate one PNG image and return its decoded bytes."""
-    api_key = settings.OPENAI_API_KEY
+    api_key = getattr(settings, "OPENAI_API_KEY", "") or os.getenv("OPENAI_API_KEY", "")
+    api_key = api_key.strip() if api_key else ""
     if not api_key:
         raise OpenAIImageConfigurationError(
             "OpenAI API key is missing. Add OPENAI_API_KEY to the project .env file."
         )
 
+    model = getattr(settings, "OPENAI_IMAGE_MODEL", "") or os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-2.5-sunburst")
+    quality = getattr(settings, "OPENAI_IMAGE_QUALITY", "") or os.getenv("OPENAI_IMAGE_QUALITY", "high")
+
     payload = {
-        "model": settings.OPENAI_IMAGE_MODEL,
+        "model": model.strip(),
         "prompt": prompt,
         "size": size,
-        "quality": settings.OPENAI_IMAGE_QUALITY,
+        "quality": quality.strip(),
         "output_format": "png",
         "background": "opaque",
         "n": 1,
@@ -37,9 +42,17 @@ def generate_openai_image(prompt, size, safety_identifier=None):
     if safety_identifier:
         payload["safety_identifier"] = safety_identifier
 
+    endpoint = OPENAI_IMAGES_URL
+    references = reference_images or ([reference_image] if reference_image else [])
+    if references:
+        endpoint = "https://api.openai.com/v1/images/edits"
+        payload["images"] = [{"image_url": image} for image in references]
+        if model.strip() == "gpt-image-1.5":
+            payload["input_fidelity"] = "high"
+
     try:
         response = requests.post(
-            OPENAI_IMAGES_URL,
+            endpoint,
             headers={
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",

@@ -1460,20 +1460,14 @@ ul, ol { list-style: none; }
 }
 
 .generated-actions {
-    position: absolute;
-    right: 12px;
-    bottom: 12px;
-    left: 12px;
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
     gap: 8px;
-    padding: 9px;
-    border: 1px solid rgba(255,255,255,0.32);
-    border-radius: 13px;
-    background: rgba(21,19,42,0.68);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    backdrop-filter: blur(12px);
+    padding-top: 16px;
 }
+
+.generated-actions[hidden] { display: none; }
 
 .preview-footer {
     display: grid;
