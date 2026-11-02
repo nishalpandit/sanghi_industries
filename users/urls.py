@@ -12,5 +12,10 @@ urlpatterns = [
     path('subscription/', views.SubscriptionView.as_view(), name='api-subscription'),
     path('generated-posters/', views.GeneratedPosterCreateView.as_view(), name='api-generated-posters-create'),
     path('generated-posters/list/', views.GeneratedPosterListView.as_view(), name='api-generated-posters-list'),
+    path('generated-posters/<int:pk>/', views.GeneratedPosterDetailView.as_view(), name='api-generated-posters-detail'),
+    path('generated-posters/<int:pk>/delete/', views.GeneratedPosterDeleteView.as_view(), name='api-generated-posters-delete'),
+    path('generated-posters/delete/<int:pk>/', views.GeneratedPosterDeleteView.as_view(), name='api-generated-posters-delete-alt'),
+    path('my-designs/<int:pk>/delete/', views.GeneratedPosterDeleteView.as_view(), name='api-my-designs-delete'),
+    path('my-designs/delete/<int:pk>/', views.GeneratedPosterDeleteView.as_view(), name='api-my-designs-delete-alt'),
     path('payment/', views.PaymentAPIView.as_view(), name='api-payment'),
 ]

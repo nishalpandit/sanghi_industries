@@ -231,6 +231,8 @@ class MasterDataTests(TestCase):
 
     def setUp(self):
         self.client = APIClient()
+        self.user = User.objects.create_user(username='master_tester', password='password')
+        self.client.force_authenticate(user=self.user)
         BusinessType.objects.create(name='Manufacturer', is_active=True)
         BusinessType.objects.create(name='Inactive Type', is_active=False)
         BusinessCategory.objects.create(name='Technology', is_active=True)
@@ -247,3 +249,84 @@ class MasterDataTests(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertTrue(resp.data['success'])
         self.assertEqual(len(resp.data['data']), 1)
+
+class GeneratedPosterAPITests(TestCase):
+    """Tests for GeneratedPoster API endpoints (list, retrieve, delete)."""
+
+    def setUp(self):
+        from users.models import GeneratedPoster
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        self.client = APIClient()
+
+        # User 1 & Profile
+        self.user1 = User.objects.create_user(username='user1', password='password')
+        self.profile1 = Profile.objects.create(user=self.user1, mobile_number='9999900001')
+
+        # User 2 & Profile
+        self.user2 = User.objects.create_user(username='user2', password='password')
+        self.profile2 = Profile.objects.create(user=self.user2, mobile_number='9999900002')
+
+        # Dummy poster for User 1
+        dummy_file = SimpleUploadedFile("poster1.png", b"fake-png-content", content_type="image/png")
+        self.poster1 = GeneratedPoster.objects.create(profile=self.profile1, image=dummy_file)
+
+    def tearDown(self):
+        if self.poster1 and self.poster1.image:
+            try:
+                self.poster1.image.delete(save=False)
+            except Exception:
+                pass
+
+    def test_delete_poster_unauthenticated_returns_401(self):
+        resp = self.client.delete(f'/api/users/generated-posters/{self.poster1.id}/')
+        self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_delete_poster_via_delete_method_success(self):
+        self.client.force_authenticate(user=self.user1)
+        resp = self.client.delete(f'/api/users/generated-posters/{self.poster1.id}/')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertTrue(resp.data['success'])
+        self.assertEqual(resp.data['message'], 'Design deleted successfully.')
+
+        from users.models import GeneratedPoster
+        self.assertFalse(GeneratedPoster.objects.filter(id=self.poster1.id).exists())
+
+    def test_delete_poster_via_post_delete_endpoint_success(self):
+        self.client.force_authenticate(user=self.user1)
+        resp = self.client.post(f'/api/users/generated-posters/{self.poster1.id}/delete/')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertTrue(resp.data['success'])
+
+        from users.models import GeneratedPoster
+        self.assertFalse(GeneratedPoster.objects.filter(id=self.poster1.id).exists())
+
+    def test_delete_poster_via_my_designs_delete_endpoint(self):
+        self.client.force_authenticate(user=self.user1)
+        resp = self.client.delete(f'/api/users/my-designs/{self.poster1.id}/delete/')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertTrue(resp.data['success'])
+
+        from users.models import GeneratedPoster
+        self.assertFalse(GeneratedPoster.objects.filter(id=self.poster1.id).exists())
+
+    def test_delete_poster_belonging_to_another_user_returns_404(self):
+        self.client.force_authenticate(user=self.user2)
+        resp = self.client.delete(f'/api/users/generated-posters/{self.poster1.id}/')
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertFalse(resp.data['success'])
+
+        from users.models import GeneratedPoster
+        self.assertTrue(GeneratedPoster.objects.filter(id=self.poster1.id).exists())
+
+    def test_delete_nonexistent_poster_returns_404(self):
+        self.client.force_authenticate(user=self.user1)
+        resp = self.client.delete('/api/users/generated-posters/999999/')
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertFalse(resp.data['success'])
+
+    def test_get_poster_detail_success(self):
+        self.client.force_authenticate(user=self.user1)
+        resp = self.client.get(f'/api/users/generated-posters/{self.poster1.id}/')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertTrue(resp.data['success'])
+        self.assertEqual(resp.data['data']['id'], self.poster1.id)

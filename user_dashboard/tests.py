@@ -206,3 +206,60 @@ class AIGenerationViewTests(TestCase):
         self.subscription.refresh_from_db()
         self.assertEqual(self.subscription.credits_available, 2)
         self.assertFalse(GeneratedPoster.objects.filter(profile=self.profile).exists())
+
+class MyDesignsDeleteTests(TestCase):
+    def setUp(self):
+        from users.models import Profile, GeneratedPoster
+        from django.contrib.auth.models import User
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        self.user = User.objects.create_user(username="9999999999", password="password")
+        self.profile = Profile.objects.create(user=self.user, mobile_number="9999999999")
+        if hasattr(self.profile, 'subscription') and self.profile.subscription:
+            self.sub = self.profile.subscription
+            self.sub.plan_name = "Pro"
+            self.sub.credits_available = 5
+            self.sub.save()
+
+        self.client.force_login(self.user)
+        self.poster = GeneratedPoster.objects.create(
+            profile=self.profile,
+            image=SimpleUploadedFile("my_design.png", b"sample-bytes", content_type="image/png")
+        )
+
+    def tearDown(self):
+        if self.poster and self.poster.image:
+            try:
+                self.poster.image.delete(save=False)
+            except Exception:
+                pass
+
+    def test_design_delete_via_ajax_returns_json(self):
+        from users.models import GeneratedPoster
+        resp = self.client.post(
+            f"/user-dashboard/my-designs/delete/{self.poster.id}/",
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+            HTTP_ACCEPT="application/json"
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data["success"])
+        self.assertEqual(data["design_id"], self.poster.id)
+        self.assertFalse(GeneratedPoster.objects.filter(id=self.poster.id).exists())
+
+    def test_design_delete_via_form_redirects(self):
+        from users.models import GeneratedPoster
+        resp = self.client.post(f"/user-dashboard/my-designs/delete/{self.poster.id}/")
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(resp.url, "/user-dashboard/my-designs/")
+        self.assertFalse(GeneratedPoster.objects.filter(id=self.poster.id).exists())
+
+    def test_design_delete_nonexistent_returns_404_json(self):
+        resp = self.client.post(
+            "/user-dashboard/my-designs/delete/999999/",
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+            HTTP_ACCEPT="application/json"
+        )
+        self.assertEqual(resp.status_code, 404)
+        data = resp.json()
+        self.assertFalse(data["success"])

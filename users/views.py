@@ -635,12 +635,85 @@ class GeneratedPosterListView(APIView):
     def get(self, request):
         from .serializers import GeneratedPosterSerializer
         from .models import GeneratedPoster
-        posters = GeneratedPoster.objects.filter(profile=request.user.profile).order_by('-created_at')
+        profile = getattr(request.user, 'profile', None)
+        if not profile and not (request.user.is_superuser or request.user.is_staff):
+            return Response({'success': False, 'message': 'Profile not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.user.is_superuser or request.user.is_staff:
+            posters = GeneratedPoster.objects.all().order_by('-created_at')
+        else:
+            posters = GeneratedPoster.objects.filter(profile=profile).order_by('-created_at')
+
         serializer = GeneratedPosterSerializer(posters, many=True, context={'request': request})
         return Response({
             'success': True,
             'data': serializer.data
         })
+
+
+class GeneratedPosterDetailView(APIView):
+    """
+    API endpoint for retrieving or deleting a specific generated poster (design).
+    GET /api/users/generated-posters/<id>/
+    DELETE /api/users/generated-posters/<id>/
+    """
+    from rest_framework.permissions import IsAuthenticated
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, pk, user):
+        from .models import GeneratedPoster
+        if user.is_superuser or user.is_staff:
+            return GeneratedPoster.objects.filter(pk=pk).first()
+        profile = getattr(user, 'profile', None)
+        if not profile:
+            return None
+        return GeneratedPoster.objects.filter(pk=pk, profile=profile).first()
+
+    def get(self, request, pk):
+        from .serializers import GeneratedPosterSerializer
+        poster = self.get_object(pk, request.user)
+        if not poster:
+            return Response({
+                'success': False,
+                'message': 'Design not found.'
+            }, status=status.HTTP_404_NOT_FOUND)
+        serializer = GeneratedPosterSerializer(poster, context={'request': request})
+        return Response({
+            'success': True,
+            'data': serializer.data
+        })
+
+    def delete(self, request, pk):
+        poster = self.get_object(pk, request.user)
+        if not poster:
+            return Response({
+                'success': False,
+                'message': 'Design not found.'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        if poster.image:
+            try:
+                poster.image.delete(save=False)
+            except Exception:
+                pass
+        poster.delete()
+        return Response({
+            'success': True,
+            'message': 'Design deleted successfully.'
+        }, status=status.HTTP_200_OK)
+
+    def post(self, request, pk):
+        """Allow POST for clients that cannot send HTTP DELETE."""
+        return self.delete(request, pk)
+
+
+class GeneratedPosterDeleteView(GeneratedPosterDetailView):
+    """
+    Dedicated endpoint for deleting a specific generated poster (design).
+    DELETE /api/users/generated-posters/<id>/delete/
+    POST /api/users/generated-posters/<id>/delete/
+    """
+    pass
 
 
 class PaymentAPIView(APIView):

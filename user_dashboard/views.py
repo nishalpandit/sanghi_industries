@@ -308,6 +308,13 @@ def ai_generation(request):
 
 @login_required(login_url='user_dashboard:login')
 def design_delete(request, design_id):
+    is_api = (
+        request.headers.get('x-requested-with') == 'XMLHttpRequest'
+        or 'application/json' in request.headers.get('accept', '')
+        or request.content_type == 'application/json'
+        or request.GET.get('format') == 'json'
+    )
+
     try:
         if request.user.is_authenticated and hasattr(request.user, 'profile') and not request.user.is_superuser:
             try:
@@ -323,9 +330,28 @@ def design_delete(request, design_id):
             except Exception:
                 pass
         poster.delete()
+
+        if is_api:
+            return JsonResponse({
+                'success': True,
+                'message': 'Design deleted successfully.',
+                'design_id': design_id,
+            })
         messages.success(request, "Design deleted successfully.")
     except GeneratedPoster.DoesNotExist:
+        if is_api:
+            return JsonResponse({
+                'success': False,
+                'message': 'Design not found.',
+            }, status=404)
         messages.error(request, "Design not found.")
+    except Exception as e:
+        if is_api:
+            return JsonResponse({
+                'success': False,
+                'message': str(e),
+            }, status=500)
+        messages.error(request, f"Failed to delete design: {e}")
 
     return redirect('user_dashboard:my_designs')
 
