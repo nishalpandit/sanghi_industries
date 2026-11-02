@@ -1,4 +1,4 @@
-# Sanghi
+# Smart Flex
 
 A Django web application for creating and downloading customized business marketing posters, banners, and promotional designs.
 

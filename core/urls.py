@@ -16,3 +16,9 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+# Smart Flex Admin Site Customization
+admin.site.site_header = "Smart Flex Administration"
+admin.site.site_title = "Smart Flex Admin Portal"
+admin.site.index_title = "Welcome to Smart Flex Admin Portal"
