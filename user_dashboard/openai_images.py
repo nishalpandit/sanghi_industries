@@ -18,8 +18,19 @@ class OpenAIImageConfigurationError(OpenAIImageError):
     """Raised when the OpenAI image integration is not configured."""
 
 
+class OpenAIBillingQuotaError(OpenAIImageError):
+    """Raised when the OpenAI account has run out of credits or reached its billing quota."""
+
+
 def generate_openai_image(prompt, size, safety_identifier=None, reference_image=None, reference_images=None):
     """Generate one PNG image and return its decoded bytes."""
+    mock_mode = (
+        getattr(settings, "MOCK_AI_GENERATION", False)
+        or os.getenv("MOCK_AI_GENERATION", "false").strip().lower() in ("true", "1", "yes")
+    )
+    if mock_mode:
+        return generate_mock_poster(prompt, size)
+
     api_key = getattr(settings, "OPENAI_API_KEY", "") or os.getenv("OPENAI_API_KEY", "")
     api_key = api_key.strip() if api_key else ""
     if not api_key:
@@ -73,6 +84,14 @@ def generate_openai_image(prompt, size, safety_identifier=None, reference_image=
     if response.status_code != 200:
         error = response_data.get("error", {})
         message = error.get("message") or f"OpenAI returned HTTP {response.status_code}."
+        code = error.get("code")
+        err_type = error.get("type")
+        if code in ("credit_balance_exhausted", "insufficient_quota") or err_type == "insufficient_quota":
+            raise OpenAIBillingQuotaError(
+                "You have no credits remaining on your OpenAI account. "
+                "Add credits at https://platform.openai.com/settings/organization/billing/ "
+                "or update OPENAI_API_KEY in .env."
+            )
         raise OpenAIImageError(message)
 
     try:
@@ -85,3 +104,42 @@ def generate_openai_image(prompt, size, safety_identifier=None, reference_image=
         raise OpenAIImageError("OpenAI returned an empty image.")
 
     return image_bytes
+
+def generate_mock_poster(prompt, size):
+    """Generate a placeholder poster PNG for local testing when OpenAI is unavailable."""
+    import io
+    from PIL import Image, ImageDraw, ImageFont
+
+    try:
+        w, h = [int(v) for v in size.split("x")]
+    except Exception:
+        w, h = 1024, 1024
+
+    img = Image.new("RGB", (w, h), (18, 16, 38))
+    draw = ImageDraw.Draw(img)
+
+    for y in range(h):
+        r = int(18 + (y / h) * 45)
+        g = int(16 + (y / h) * 20)
+        b = int(38 + (y / h) * 60)
+        draw.line([(0, y), (w, y)], fill=(r, g, b))
+
+    margin = int(min(w, h) * 0.05)
+    draw.rectangle([(margin, margin), (w - margin, h - margin)], outline=(255, 255, 255), width=3)
+
+    try:
+        font_large = ImageFont.truetype(r"C:\Windows\Fonts\arialbd.ttf", int(min(w, h) * 0.06))
+        font_small = ImageFont.truetype(r"C:\Windows\Fonts\arial.ttf", int(min(w, h) * 0.035))
+    except Exception:
+        font_large = font_small = ImageFont.load_default()
+
+    draw.text((w // 2, margin + 50), "SMART FLEX AI", fill=(255, 215, 0), font=font_large, anchor="mm")
+    
+    snippet = (prompt[:120] + "...") if len(prompt) > 120 else prompt
+    draw.text((w // 2, h // 2), snippet, fill=(240, 240, 240), font=font_small, anchor="mm")
+    
+    draw.text((w // 2, h - margin - 50), f"Demo Mode • {size}", fill=(180, 180, 200), font=font_small, anchor="mm")
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()

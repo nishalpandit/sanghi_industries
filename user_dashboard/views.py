@@ -28,6 +28,7 @@ from users.services import create_otp_record, verify_otp_hash
 from .openai_images import (
     OpenAIImageConfigurationError,
     OpenAIImageError,
+    OpenAIBillingQuotaError,
     generate_openai_image,
 )
 from django.utils import timezone
@@ -597,6 +598,12 @@ def ai_generate(request):
         })
     except OpenAIImageConfigurationError as e:
         return JsonResponse({"success": False, "message": str(e)}, status=503)
+    except OpenAIBillingQuotaError as e:
+        return JsonResponse({
+            "success": False,
+            "error_code": "openai_credits_exhausted",
+            "message": str(e),
+        }, status=402)
     except OpenAIImageError as e:
         return JsonResponse({"success": False, "message": f"OpenAI image generation failed: {str(e)}"}, status=502)
     except Exception as e:
