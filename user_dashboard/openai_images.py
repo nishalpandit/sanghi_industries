@@ -22,6 +22,10 @@ class OpenAIBillingQuotaError(OpenAIImageError):
     """Raised when the OpenAI account has run out of credits or reached its billing quota."""
 
 
+class OpenAISafetyError(OpenAIImageError):
+    """Raised when OpenAI's content safety/moderation filter flags or rejects a prompt or image."""
+
+
 def generate_openai_image(prompt, size, safety_identifier=None, reference_image=None, reference_images=None):
     """Generate one PNG image and return its decoded bytes."""
     mock_mode = (
@@ -86,12 +90,29 @@ def generate_openai_image(prompt, size, safety_identifier=None, reference_image=
         message = error.get("message") or f"OpenAI returned HTTP {response.status_code}."
         code = error.get("code")
         err_type = error.get("type")
+        msg_lower = (message or "").lower()
+
         if code in ("credit_balance_exhausted", "insufficient_quota") or err_type == "insufficient_quota":
             raise OpenAIBillingQuotaError(
                 "You have no credits remaining on your OpenAI account. "
                 "Add credits at https://platform.openai.com/settings/organization/billing/ "
                 "or update OPENAI_API_KEY in .env."
             )
+
+        if (
+            code in ("safety_system_rejection", "content_policy_violation")
+            or err_type in ("safety_system_rejection", "content_policy_violation")
+            or "rejected by the safety system" in msg_lower
+            or "safety system" in msg_lower
+            or "content policy" in msg_lower
+        ):
+            raise OpenAISafetyError(
+                "Your request was rejected by OpenAI's safety system. "
+                "This usually happens when the description or uploaded photo contains real public figures, "
+                "politicians, sensitive words, or policy-restricted content. "
+                "Please simplify your description, remove sensitive names, or try with a different reference photo."
+            )
+
         raise OpenAIImageError(message)
 
     try:

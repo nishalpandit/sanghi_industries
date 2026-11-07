@@ -29,6 +29,7 @@ from .openai_images import (
     OpenAIImageConfigurationError,
     OpenAIImageError,
     OpenAIBillingQuotaError,
+    OpenAISafetyError,
     generate_openai_image,
 )
 from django.utils import timezone
@@ -551,11 +552,9 @@ def ai_generate(request):
             "the first image as the primary subject and the others only where relevant to the brief. "
             "Use layout references for composition without copying unrelated faces or text. "
             "If it contains a person, preserve that specific person's identity as the highest priority: "
-            "same facial structure, eyes, nose, lips, jawline, skin tone, age, hairline and distinctive "
-            "features. Keep the original face and expression wherever possible; do not beautify, "
-            "reshape, replace or invent a similar-looking face. Build the requested poster around "
-            "the reference person. Change clothing, pose or surroundings only as requested, while "
-            "preserving facial identity. If it is a product or logo, preserve its recognizable details."
+            "maintain their natural appearance, expression and recognizable features. "
+            "Integrate the subject naturally into the poster theme, lighting and composition. "
+            "If it is a product or logo, preserve its recognizable details."
         )
     image_size = resolve_openai_image_size(aspect_ratio)
 
@@ -604,6 +603,12 @@ def ai_generate(request):
             "error_code": "openai_credits_exhausted",
             "message": str(e),
         }, status=402)
+    except OpenAISafetyError as e:
+        return JsonResponse({
+            "success": False,
+            "error_code": "safety_system_rejection",
+            "message": str(e),
+        }, status=400)
     except OpenAIImageError as e:
         return JsonResponse({"success": False, "message": f"OpenAI image generation failed: {str(e)}"}, status=502)
     except Exception as e:

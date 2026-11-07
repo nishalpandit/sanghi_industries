@@ -605,7 +605,8 @@
                 }
                 showToast(data.message || 'Poster generated with OpenAI!');
             } else {
-                renderGenerationError(data.message || 'Error generating the OpenAI image.');
+                var errTitle = data.error_code === 'safety_system_rejection' ? 'Content Safety Notice' : 'Generation failed';
+                renderGenerationError(data.message || 'Error generating the OpenAI image.', errTitle);
                 showToast(data.message || 'Error generating poster.');
             }
         })
